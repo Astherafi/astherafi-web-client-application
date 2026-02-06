@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asthera AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: transparent;
+      --card-bg: rgba(15, 23, 42, 0.6);
+      --input-bg: rgba(15, 23, 42, 0.8);
+      --border: rgba(0, 212, 170, 0.15);
+      --cyan: #00d4aa;
+      --purple: #8b5cf6;
+      --text: #f1f5f9;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 0;
+    }
+    .ai-container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    .ai-greeting {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .ai-greeting h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .ai-greeting p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .chat-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      backdrop-filter: blur(10px);
+    }
+    .chat-messages {
+      display: none;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+      padding: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .chat-messages.has-messages {
+      display: block;
+    }
+    .chat-msg {
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      word-wrap: break-word;
+    }
+    .chat-msg.user {
+      background: linear-gradient(135deg, rgba(0,212,170,0.15), rgba(139,92,246,0.15));
+      border: 1px solid rgba(0,212,170,0.2);
+      margin-left: 40px;
+    }
+    .chat-msg.ai {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(100,116,139,0.2);
+      margin-right: 40px;
+    }
+    .chat-msg.ai .msg-label,
+    .chat-msg.user .msg-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .chat-msg.user .msg-label { color: var(--cyan); }
+    .chat-msg.ai .msg-label { color: var(--purple); }
+    .input-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 6px 6px 6px 16px;
+      transition: border-color 0.2s;
+    }
+    .input-area:focus-within {
+      border-color: var(--cyan);
+      box-shadow: 0 0 20px rgba(0,212,170,0.1);
+    }
+    .input-area input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+    }
+    .input-area input::placeholder {
+      color: var(--muted);
+    }
+    .send-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      color: white;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .send-btn:hover { opacity: 0.9; }
+    .send-btn:active { transform: scale(0.95); }
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .send-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+      justify-content: center;
+    }
+    .quick-btn {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.5);
+      color: var(--muted);
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .quick-btn:hover {
+      border-color: var(--cyan);
+      color: var(--text);
+      background: rgba(0, 212, 170, 0.08);
+    }
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 14px;
+    }
+    .typing-indicator span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--purple);
+      animation: bounce 1.4s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+    @media (max-width: 480px) {
+      .ai-greeting h2 { font-size: 1.35rem; }
+      .quick-actions { gap: 6px; }
+      .quick-btn { padding: 6px 12px; font-size: 11px; }
+      .chat-msg { margin-left: 0 !important; margin-right: 0 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ai-container">
+    <div class="ai-greeting">
+      <h2>Asthera AI</h2>
+      <p id="greetingText">Your AI-powered DeFi assistant</p>
+    </div>
+
+    <div class="chat-box">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="input-area">
+        <input type="text" id="chatInput" placeholder="Ask anything about crypto & DeFi..." autocomplete="off" />
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="quick-actions" id="quickActions"></div>
+    </div>
+  </div>
+
+  <script>
+    const i18n = {
+      en: {
+        greeting: 'Your AI-powered DeFi assistant',
+        placeholder: 'Ask anything about crypto & DeFi...',
+        you: 'You',
+        aiName: 'Asthera AI',
+        error: 'Sorry, something went wrong. Please try again.',
+        offline: 'Unable to connect to AI service. Please try again later.',
+        rateLimit: 'Too many requests. Please wait a moment.',
+        quickBtns: [
+          { label: 'What is Bitcoin?', q: 'What is Bitcoin and how does it work?' },
+          { label: 'Blockchain basics', q: 'Explain blockchain technology simply' },
+          { label: 'Top DeFi protocols', q: 'What are the top DeFi protocols and how do they work?' },
+          { label: 'Chart analysis', q: 'How to read crypto charts and do technical analysis?' },
+          { label: 'CEX vs DEX', q: 'What is the difference between CEX and DEX?' },
+        ]
+      },
+      zh: {
+        greeting: '您的AI驱动DeFi助手',
+        placeholder: '询问任何关于加密货币和DeFi的问题...',
+        you: '您',
+        aiName: 'Asthera AI',
+        error: '抱歉，出了点问题，请重试。',
+        offline: '无法连接AI服务，请稍后再试。',
+        rateLimit: '请求过多，请稍等片刻。',
+        quickBtns: [
+          { label: '什么是比特币？', q: '什么是比特币，它是如何运作的？' },
+          { label: '区块链基础', q: '用简单的方式解释区块链技术' },
+          { label: '顶级DeFi协议', q: '目前最热门的DeFi协议有哪些，它们如何运作？' },
+          { label: '图表分析', q: '如何阅读加密货币图表并进行技术分析？' },
+          { label: 'CEX vs DEX', q: '中心化交易所和去中心化交易所有什么区别？' },
+        ]
+      },
+      ar: {
+        greeting: 'مساعد DeFi المدعوم بالذكاء الاصطناعي',
+        placeholder: 'اسأل أي شيء عن العملات المشفرة و DeFi...',
+        you: 'أنت',
+        aiName: 'Asthera AI',
+        error: 'عذراً، حدث خطأ ما. حاول مرة أخرى.',
+        offline: 'تعذر الاتصال بخدمة الذكاء الاصطناعي. حاول لاحقاً.',
+        rateLimit: 'طلبات كثيرة. انتظر لحظة.',
+        quickBtns: [
+          { label: 'ما هو البيتكوين؟', q: 'ما هو البيتكوين وكيف يعمل؟' },
+          { label: 'أساسيات البلوكشين', q: 'اشرح تقنية البلوكشين ببساطة' },
+          { label: 'أفضل بروتوكولات DeFi', q: 'ما هي أفضل بروتوكولات DeFi وكيف تعمل؟' },
+          { label: 'تحليل الرسوم البيانية', q: 'كيف تقرأ مخططات العملات المشفرة وتجري التحليل الفني؟' },
+          { label: 'CEX مقابل DEX', q: 'ما الفرق بين البورصة المركزية واللامركزية؟' },
+        ]
+      }
+    };
+
+    let lang = 'en';
+    const messagesEl = document.getElementById('chatMessages');
+    const inputEl = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const quickActions = document.getElementById('quickActions');
+    let isLoading = false;
+
+    function t(key) { return (i18n[lang] || i18n.en)[key] || i18n.en[key]; }
+
+    function detectLanguage() {
+      try {
+        const stored = window.parent.localStorage.getItem('astherafi-lang');
+        if (stored && i18n[stored]) { lang = stored; return; }
+      } catch(e) {}
+      try {
+        const stored = localStorage.getItem('astherafi-lang');
+        if (stored && i18n[stored]) { lang = stored; return; }
+      } catch(e) {}
+      const params = new URLSearchParams(window.location.search);
+      const paramLang = params.get('lang');
+      if (paramLang && i18n[paramLang]) { lang = paramLang; return; }
+    }
+
+    function applyLanguage() {
+      document.getElementById('greetingText').textContent = t('greeting');
+      inputEl.placeholder = t('placeholder');
+      quickActions.innerHTML = '';
+      t('quickBtns').forEach(btn => {
+        const el = document.createElement('button');
+        el.className = 'quick-btn';
+        el.textContent = btn.label;
+        el.onclick = () => askQuick(btn.q);
+        quickActions.appendChild(el);
+      });
+    }
+
+    function getApiBase() { return ''; }
+
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !isLoading) sendMessage();
+    });
+
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'setLanguage' && i18n[e.data.lang]) {
+        lang = e.data.lang;
+        applyLanguage();
+      }
+    });
+
+    function addMessage(text, role) {
+      messagesEl.classList.add('has-messages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + role;
+      const label = role === 'user' ? t('you') : t('aiName');
+      const formatted = role === 'ai' ? formatAIResponse(text) : escapeHtml(text);
+      div.innerHTML = '<div class="msg-label">' + label + '</div>' + formatted;
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatAIResponse(text) {
+      let html = escapeHtml(text);
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/^[-•]\s(.+)$/gm, '<span style="display:block;padding-left:12px;margin:2px 0;">&#8226; $1</span>');
+      html = html.replace(/\n/g, '<br>');
+      return html;
+    }
+
+    function showTyping() {
+      const div = document.createElement('div');
+      div.className = 'chat-msg ai';
+      div.id = 'typingMsg';
+      div.innerHTML = '<div class="msg-label">' + t('aiName') + '</div><div class="typing-indicator"><span></span><span></span><span></span></div>';
+      messagesEl.classList.add('has-messages');
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function removeTyping() {
+      const el = document.getElementById('typingMsg');
+      if (el) el.remove();
+    }
+
+    async function sendMessage() {
+      const msg = inputEl.value.trim();
+      if (!msg || isLoading) return;
+
+      isLoading = true;
+      sendBtn.disabled = true;
+      inputEl.value = '';
+      quickActions.style.display = 'none';
+
+      addMessage(msg, 'user');
+      showTyping();
+
+      try {
+        const res = await fetch(getApiBase() + '/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg, lang: lang }),
+        });
+        const data = await res.json();
+        removeTyping();
+        if (data.reply) {
+          addMessage(data.reply, 'ai');
+        } else {
+          addMessage(data.error || t('error'), 'ai');
+        }
+      } catch (err) {
+        removeTyping();
+        addMessage(t('offline'), 'ai');
+      }
+
+      isLoading = false;
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+
+    function askQuick(question) {
+      inputEl.value = question;
+      sendMessage();
+    }
+
+    detectLanguage();
+    applyLanguage();
+
+    setInterval(() => {
+      try {
+        const stored = localStorage.getItem('astherafi-lang') || 
+                       (window.parent !== window ? window.parent.localStorage.getItem('astherafi-lang') : null);
+        if (stored && i18n[stored] && stored !== lang) {
+          lang = stored;
+          applyLanguage();
+        }
+      } catch(e) {}
+    }, 2000);
+  </script>
+</body>
+</html>

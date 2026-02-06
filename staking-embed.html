@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASTHER Staking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: transparent;
+      --card-bg: hsl(222, 47%, 9%);
+      --border: hsl(222, 30%, 14%);
+      --cyan: hsl(185, 85%, 50%);
+      --purple: hsl(270, 70%, 60%);
+      --text: hsl(210, 40%, 98%);
+      --muted: hsl(215, 20%, 55%);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      min-height: 900px;
+    }
+    .container { max-width: 100%; padding-bottom: 40px; }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 0 4px;
+    }
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .header h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .total-staked {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .total-label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .total-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .pool-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .pool-tab {
+      flex: 1;
+      padding: 16px 14px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+    .pool-tab:hover {
+      border-color: var(--cyan);
+    }
+    .pool-tab.active {
+      background: linear-gradient(135deg, rgba(0,255,255,0.1), rgba(138,43,226,0.1));
+      border-color: var(--cyan);
+    }
+    .pool-tab-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .lock-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--purple);
+    }
+    .lock-icon.unlocked {
+      color: var(--cyan);
+    }
+    .pool-tab-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .lock-badge {
+      margin-left: auto;
+      background: rgba(138,43,226,0.2);
+      color: var(--purple);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .pool-tab-apy {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+    .fire-icon {
+      font-size: 16px;
+    }
+    .apy-label {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--muted);
+      margin-left: 2px;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-label { color: var(--muted); font-size: 11px; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; }
+    .stat-value.cyan { color: var(--cyan); }
+    .stat-value.green { color: #4ade80; }
+    .stat-value.purple { color: var(--purple); }
+    .input-group { margin-bottom: 14px; }
+    .input-group label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+    input:focus { border-color: var(--cyan); }
+    .btn-group { display: flex; gap: 10px; margin-top: 16px; }
+    button {
+      flex: 1;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      color: hsl(222, 47%, 6%);
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+    }
+    .btn-outline:hover { background: rgba(0,255,255,0.1); }
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+      flex: 0.5;
+    }
+    .connect-btn {
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      color: hsl(222, 47%, 6%);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-size: 13px;
+    }
+    .wallet-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: rgba(0,255,255,0.1);
+      border: 1px solid var(--cyan);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .wallet-address { font-family: monospace; color: var(--cyan); }
+    .status { padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; }
+    .status.success { background: rgba(74,222,128,0.1); border: 1px solid #4ade80; color: #4ade80; }
+    .status.error { background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; }
+    .status.info { background: rgba(0,255,255,0.1); border: 1px solid var(--cyan); color: var(--cyan); }
+    .loading { opacity: 0.7; pointer-events: none; }
+    .token-balance { font-size: 13px; color: var(--muted); margin-top: 6px; }
+    .withdraw-section { display: flex; gap: 10px; align-items: center; }
+    .withdraw-section button { flex: 1; }
+    .note { color: var(--muted); font-size: 11px; margin-top: 10px; }
+    
+    .how-to-stake h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: hsl(222, 47%, 6%);
+      flex-shrink: 0;
+    }
+    .step-text {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .pool-tabs { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <h2>Stake ASTHER & Earn Rewards</h2>
+        <div class="total-staked" style="display: none;">
+          <span class="total-label">Total Staked:</span>
+          <span class="total-value" id="totalStaked">0</span>
+        </div>
+      </div>
+      <div id="walletSection">
+        <button class="connect-btn" id="connectBtn">Connect Wallet</button>
+      </div>
+    </div>
+
+    <div id="statusMessage"></div>
+
+    <div class="pool-tabs" id="poolTabs">
+      <div class="pool-tab active" data-pool="0" onclick="selectPool(0)">
+        <div class="pool-tab-header">
+          <svg class="lock-icon unlocked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+          </svg>
+          <span class="pool-tab-name">Flexible</span>
+        </div>
+        <div class="pool-tab-apy"><span class="fire-icon">🔥</span> <span id="pool0Apy">--%</span> <span class="apy-label">APY</span></div>
+      </div>
+      <div class="pool-tab" data-pool="1" onclick="selectPool(1)">
+        <div class="pool-tab-header">
+          <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span class="pool-tab-name">3 Days</span>
+          <span class="lock-badge">3d</span>
+        </div>
+        <div class="pool-tab-apy"><span class="fire-icon">🔥</span> <span id="pool1Apy">--%</span> <span class="apy-label">APY</span></div>
+      </div>
+      <div class="pool-tab" data-pool="2" onclick="selectPool(2)">
+        <div class="pool-tab-header">
+          <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span class="pool-tab-name">7 Days</span>
+          <span class="lock-badge">7d</span>
+        </div>
+        <div class="pool-tab-apy"><span class="fire-icon">🔥</span> <span id="pool2Apy">--%</span> <span class="apy-label">APY</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">APY</div>
+          <div class="stat-value cyan" id="apyValue">--%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Your Stake</div>
+          <div class="stat-value" id="stakedValue">0.00</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Pending Rewards</div>
+          <div class="stat-value green" id="rewardsValue">0.00</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Lock Duration</div>
+          <div class="stat-value purple" id="lockValue">--</div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Amount to Stake (ASTHER)</label>
+        <input type="number" id="stakeAmount" placeholder="Enter amount" />
+        <div class="token-balance">Balance: <span id="tokenBalance">0.00</span> ASTHER 
+          <a href="#" onclick="setMaxAmount(); return false;" style="color: var(--cyan); margin-left: 8px;">MAX</a>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-primary" id="approveBtn" onclick="approveTokens()">Approve</button>
+        <button class="btn-primary" id="stakeBtn" onclick="stakeTokens()">Stake</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="withdraw-section">
+        <button class="btn-outline" id="withdrawBtn" onclick="withdrawTokens()">Withdraw + Rewards</button>
+        <button class="btn-danger" id="emergencyBtn" onclick="emergencyWithdraw()">Emergency</button>
+      </div>
+      <p class="note">Emergency withdraw forfeits rewards. Early withdrawal may incur 10% penalty.</p>
+    </div>
+
+    <div class="card how-to-stake">
+      <h3>How to Stake</h3>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">1</span>
+          <span class="step-text">Connect your wallet (MetaMask)</span>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <span class="step-text">Choose a staking pool (Flexible, 3 Days, or 7 Days)</span>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <span class="step-text">Enter the amount of ASTHER you want to stake</span>
+        </div>
+        <div class="step">
+          <span class="step-num">4</span>
+          <span class="step-text">Click "Approve" to allow the contract to use your tokens</span>
+        </div>
+        <div class="step">
+          <span class="step-num">5</span>
+          <span class="step-text">Click "Stake" to deposit your tokens and start earning rewards</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TOKEN_ADDRESS = "0x277204675524B49D417bD0B374A1FB09465F7777";
+    const STAKING_CONTRACT = "0xf3690177633C62C12423e57C99825bC4dDF92E9C";
+    const BSC_CHAIN_ID = 56;
+    const BSC_RPCS = [
+      "https://bsc-dataseed.binance.org/",
+      "https://bsc-dataseed1.binance.org/",
+      "https://bsc-dataseed2.binance.org/",
+      "https://bsc.publicnode.com"
+    ];
+    let BSC_RPC = BSC_RPCS[0];
+
+    const POOLS = [
+      { name: "Flexible", lockLabel: "No Lock", apy: 60, lockDays: 0 },
+      { name: "3 Days", lockLabel: "3 Day Lock", apy: 90, lockDays: 3 },
+      { name: "7 Days", lockLabel: "7 Day Lock", apy: 150, lockDays: 7 }
+    ];
+
+    let currentPool = 0;
+
+    const TOKEN_ABI = [
+      "function balanceOf(address) view returns (uint256)",
+      "function approve(address spender, uint256 amount) returns (bool)",
+      "function allowance(address owner, address spender) view returns (uint256)",
+      "function decimals() view returns (uint8)",
+      "function symbol() view returns (string)"
+    ];
+
+    const STAKING_ABI = [
+      "function poolLength() view returns (uint256)",
+      "function getPoolInfo(uint256 _pid) view returns (string name, uint256 apy, uint256 lockDuration, uint256 exitPenalty, uint256 totalStaked, bool isActive, uint256 lastRewardTimestamp)",
+      "function getUserInfo(uint256 _pid, address _user) view returns (uint256 amount, uint256 unlockTime, uint256 pendingRewards)",
+      "function pendingReward(uint256 _pid, address _user) view returns (uint256)",
+      "function deposit(uint256 _pid, uint256 _amount)",
+      "function withdraw(uint256 _pid)",
+      "function emergencyWithdraw(uint256 _pid)",
+      "function getTotalStaked() view returns (uint256)"
+    ];
+
+    let provider = null;
+    let signer = null;
+    let userAddress = null;
+    let tokenContract = null;
+    let stakingContract = null;
+
+    function selectPool(index) {
+      currentPool = index;
+      document.querySelectorAll('.pool-tab').forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+      });
+      
+      if (signer) {
+        loadStakingData();
+      } else {
+        loadPoolData(index);
+      }
+    }
+
+    function isMobile() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    function isIOS() {
+      return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
+
+    function isAndroid() {
+      return /Android/i.test(navigator.userAgent);
+    }
+
+    function isInAppBrowser() {
+      // Check if we're inside MetaMask, Trust Wallet, or other wallet in-app browsers
+      return window.ethereum || 
+             navigator.userAgent.includes('MetaMask') ||
+             navigator.userAgent.includes('Trust') ||
+             navigator.userAgent.includes('TokenPocket') ||
+             navigator.userAgent.includes('imToken');
+    }
+
+    function openWalletApp(walletType) {
+      const dappUrl = window.location.href.replace(/^https?:\/\//, '');
+      const fullUrl = encodeURIComponent(window.location.href);
+      
+      let deepLink;
+      
+      if (walletType === 'metamask') {
+        // MetaMask deep link - works on both iOS and Android
+        deepLink = `https://metamask.app.link/dapp/${dappUrl}`;
+      } else if (walletType === 'trust') {
+        // Trust Wallet deep link
+        deepLink = `https://link.trustwallet.com/open_url?coin_id=60&url=${fullUrl}`;
+      } else if (walletType === 'coinbase') {
+        // Coinbase Wallet deep link
+        deepLink = `https://go.cb-w.com/dapp?cb_url=${fullUrl}`;
+      }
+      
+      // Try to open the deep link
+      window.location.href = deepLink;
+    }
+
+    function showWalletSelector() {
+      const modal = document.createElement('div');
+      modal.id = 'walletModal';
+      modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+          <div style="background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%); border-radius: 16px; padding: 24px; max-width: 320px; width: 90%; border: 1px solid rgba(0,212,170,0.3);">
+            <h3 style="color: #00d4aa; margin: 0 0 16px 0; text-align: center; font-size: 18px;">Connect Wallet</h3>
+            <p style="color: #888; font-size: 12px; text-align: center; margin-bottom: 16px;">Choose your wallet app to connect</p>
+            
+            <button onclick="openWalletApp('metamask'); document.getElementById('walletModal').remove();" 
+              style="width: 100%; padding: 14px; margin-bottom: 10px; background: linear-gradient(135deg, #f6851b 0%, #e2761b 100%); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" style="width: 24px; height: 24px;" alt="MetaMask">
+              MetaMask
+            </button>
+            
+            <button onclick="openWalletApp('trust'); document.getElementById('walletModal').remove();" 
+              style="width: 100%; padding: 14px; margin-bottom: 10px; background: linear-gradient(135deg, #3375BB 0%, #0500FF 100%); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+              <svg width="24" height="24" viewBox="0 0 1024 1024" fill="white"><path d="M512 0C229.12 0 0 229.12 0 512s229.12 512 512 512 512-229.12 512-512S794.88 0 512 0zm0 928C282.24 928 96 741.76 96 512S282.24 96 512 96s416 186.24 416 416-186.24 416-416 416z"/></svg>
+              Trust Wallet
+            </button>
+            
+            <button onclick="openWalletApp('coinbase'); document.getElementById('walletModal').remove();" 
+              style="width: 100%; padding: 14px; margin-bottom: 16px; background: linear-gradient(135deg, #0052FF 0%, #0033CC 100%); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+              <svg width="24" height="24" viewBox="0 0 1024 1024" fill="white"><circle cx="512" cy="512" r="400"/></svg>
+              Coinbase Wallet
+            </button>
+            
+            <button onclick="document.getElementById('walletModal').remove();" 
+              style="width: 100%; padding: 12px; background: transparent; border: 1px solid #444; border-radius: 12px; color: #888; cursor: pointer;">
+              Cancel
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    async function connectWallet() {
+      try {
+        // Check for any ethereum provider (MetaMask, Trust Wallet, etc.)
+        const ethereum = window.ethereum || window.web3?.currentProvider;
+        
+        if (!ethereum) {
+          if (isMobile()) {
+            // On mobile without wallet browser - show wallet selector
+            showWalletSelector();
+            return;
+          } else {
+            showStatus("Please install MetaMask or another Web3 wallet", "error");
+            return;
+          }
+        }
+
+        showStatus("Connecting wallet...", "success");
+        provider = new ethers.BrowserProvider(ethereum);
+        
+        // Request accounts
+        const accounts = await provider.send("eth_requestAccounts", []);
+        userAddress = accounts[0];
+        
+        // Check network
+        const network = await provider.getNetwork();
+        if (Number(network.chainId) !== BSC_CHAIN_ID) {
+          showStatus("Switching to BSC network...", "success");
+          try {
+            await ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x38' }],
+            });
+          } catch (switchError) {
+            if (switchError.code === 4902 || switchError.code === -32603) {
+              await ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: '0x38',
+                  chainName: 'BNB Smart Chain',
+                  nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                  rpcUrls: ['https://bsc-dataseed.binance.org/', 'https://bsc-dataseed1.binance.org/'],
+                  blockExplorerUrls: ['https://bscscan.com']
+                }],
+              });
+            } else {
+              throw switchError;
+            }
+          }
+          provider = new ethers.BrowserProvider(ethereum);
+        }
+
+        signer = await provider.getSigner();
+        tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
+        stakingContract = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, signer);
+
+        document.getElementById('walletSection').innerHTML = `
+          <div class="wallet-info">
+            <span class="wallet-address">${userAddress.slice(0,6)}...${userAddress.slice(-4)}</span>
+            <button class="connect-btn" onclick="disconnectWallet()" style="padding: 6px 12px; font-size: 12px;">X</button>
+          </div>
+        `;
+
+        showStatus("Connected!", "success");
+        await loadStakingData();
+
+        ethereum.on('accountsChanged', (accounts) => {
+          if (accounts.length === 0) disconnectWallet();
+          else location.reload();
+        });
+
+      } catch (error) {
+        console.error(error);
+        showStatus("Connection failed: " + error.message, "error");
+      }
+    }
+
+    function disconnectWallet() {
+      provider = null; signer = null; userAddress = null;
+      document.getElementById('walletSection').innerHTML = `
+        <button class="connect-btn" onclick="connectWallet()">Connect Wallet</button>
+      `;
+      resetUI();
+    }
+
+    function resetUI() {
+      document.getElementById('apyValue').textContent = '--%';
+      document.getElementById('stakedValue').textContent = '0.00';
+      document.getElementById('rewardsValue').textContent = '0.00';
+      document.getElementById('lockValue').textContent = '--';
+      document.getElementById('tokenBalance').textContent = '0.00';
+    }
+
+    async function loadStakingData() {
+      if (!stakingContract || !userAddress) return;
+      try {
+        const pool = POOLS[currentPool];
+        
+        const [userInfo, pendingRewards, balance] = await Promise.all([
+          stakingContract.getUserInfo(currentPool, userAddress).catch(() => [0n, 0n, 0n, 0n]),
+          stakingContract.pendingReward(currentPool, userAddress).catch(() => 0n),
+          tokenContract.balanceOf(userAddress).catch(() => 0n)
+        ]);
+
+        document.getElementById('apyValue').textContent = `${pool.apy}%`;
+        
+        if (pool.lockDays === 0) {
+          document.getElementById('lockValue').textContent = 'Flexible';
+        } else {
+          document.getElementById('lockValue').textContent = `${pool.lockDays}d`;
+        }
+        
+        const stakedAmount = userInfo[0] || 0n;
+        document.getElementById('stakedValue').textContent = formatTokens(stakedAmount);
+        document.getElementById('rewardsValue').textContent = formatTokens(pendingRewards);
+        document.getElementById('tokenBalance').textContent = formatTokens(balance);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    }
+
+    function loadPoolData(poolIndex) {
+      const pool = POOLS[poolIndex];
+      document.getElementById('apyValue').textContent = `${pool.apy}%`;
+      
+      if (pool.lockDays === 0) {
+        document.getElementById('lockValue').textContent = 'Flexible';
+      } else {
+        document.getElementById('lockValue').textContent = `${pool.lockDays}d`;
+      }
+    }
+
+    function formatTokens(wei) {
+      return Math.floor(Number(wei) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+
+    function parseTokens(amount) {
+      return ethers.parseUnits(amount.toString(), 18);
+    }
+
+    function setMaxAmount() {
+      const balance = document.getElementById('tokenBalance').textContent;
+      document.getElementById('stakeAmount').value = balance.replace(/,/g, '');
+    }
+
+    async function approveTokens() {
+      if (!signer) { showStatus("Connect wallet first", "error"); return; }
+      const amount = document.getElementById('stakeAmount').value;
+      if (!amount || parseFloat(amount) <= 0) { showStatus("Enter amount", "error"); return; }
+
+      try {
+        document.getElementById('approveBtn').disabled = true;
+        document.getElementById('approveBtn').textContent = 'Approving...';
+        const tx = await tokenContract.approve(STAKING_CONTRACT, parseTokens(amount));
+        showStatus("Approving...", "info");
+        await tx.wait();
+        showStatus("Approved! Now click Stake", "success");
+      } catch (error) {
+        showStatus("Approval failed", "error");
+      } finally {
+        document.getElementById('approveBtn').disabled = false;
+        document.getElementById('approveBtn').textContent = 'Approve';
+      }
+    }
+
+    async function stakeTokens() {
+      if (!signer) { showStatus("Connect wallet first", "error"); return; }
+      const amount = document.getElementById('stakeAmount').value;
+      if (!amount || parseFloat(amount) <= 0) { showStatus("Enter amount", "error"); return; }
+
+      try {
+        const amountWei = parseTokens(amount);
+        const allowance = await tokenContract.allowance(userAddress, STAKING_CONTRACT);
+        if (allowance < amountWei) { showStatus("Approve first", "error"); return; }
+
+        document.getElementById('stakeBtn').disabled = true;
+        document.getElementById('stakeBtn').textContent = 'Staking...';
+        const tx = await stakingContract.deposit(currentPool, amountWei);
+        showStatus("Staking...", "info");
+        await tx.wait();
+        showStatus("Staked successfully!", "success");
+        document.getElementById('stakeAmount').value = '';
+        await loadStakingData();
+      } catch (error) {
+        showStatus("Staking failed: " + (error.reason || error.message), "error");
+      } finally {
+        document.getElementById('stakeBtn').disabled = false;
+        document.getElementById('stakeBtn').textContent = 'Stake';
+      }
+    }
+
+    async function withdrawTokens() {
+      if (!signer) { showStatus("Connect wallet first", "error"); return; }
+      try {
+        const userInfo = await stakingContract.getUserInfo(currentPool, userAddress);
+        const stakedAmount = userInfo[0] || 0n;
+        if (stakedAmount === 0n) {
+          showStatus("No tokens staked to withdraw", "error");
+          return;
+        }
+
+        const pool = POOLS[currentPool];
+        if (pool.lockDays > 0) {
+          const unlockTime = userInfo[1] || 0n;
+          const now = Math.floor(Date.now() / 1000);
+          if (Number(unlockTime) > now) {
+            const remainingSeconds = Number(unlockTime) - now;
+            const hours = Math.floor(remainingSeconds / 3600);
+            const mins = Math.floor((remainingSeconds % 3600) / 60);
+            showStatus(`Tokens still locked. Unlock in ${hours}h ${mins}m`, "error");
+            return;
+          }
+        }
+
+        document.getElementById('withdrawBtn').disabled = true;
+        document.getElementById('withdrawBtn').textContent = 'Withdrawing...';
+        
+        const tx = await stakingContract.withdraw(currentPool);
+        
+        showStatus("Withdrawing...", "info");
+        await tx.wait();
+        showStatus("Withdrawn successfully!", "success");
+        await loadStakingData();
+      } catch (error) {
+        console.error("Withdraw error:", error);
+        let msg = "Withdrawal failed";
+        if (error.reason) msg += ": " + error.reason;
+        else if (error.message) {
+          if (error.message.includes("user rejected")) msg = "Transaction rejected";
+          else if (error.message.includes("insufficient")) msg = "Insufficient gas";
+          else if (error.message.includes("lock")) msg = "Tokens still locked";
+          else msg += ": " + error.message.substring(0, 50);
+        }
+        showStatus(msg, "error");
+      } finally {
+        document.getElementById('withdrawBtn').disabled = false;
+        document.getElementById('withdrawBtn').textContent = 'Withdraw + Rewards';
+      }
+    }
+
+    async function emergencyWithdraw() {
+      if (!signer) { showStatus("Connect wallet first", "error"); return; }
+      if (!confirm("Emergency withdraw forfeits rewards and may incur 10% penalty. Continue?")) return;
+      try {
+        document.getElementById('emergencyBtn').disabled = true;
+        document.getElementById('emergencyBtn').textContent = 'Processing...';
+        
+        const tx = await stakingContract.emergencyWithdraw(currentPool);
+        
+        showStatus("Processing...", "info");
+        await tx.wait();
+        showStatus("Emergency withdrawal complete!", "success");
+        await loadStakingData();
+      } catch (error) {
+        console.error("Emergency withdraw error:", error);
+        let msg = "Emergency withdrawal failed";
+        if (error.reason) msg += ": " + error.reason;
+        else if (error.message) msg += ": " + error.message.substring(0, 60);
+        showStatus(msg, "error");
+      } finally {
+        document.getElementById('emergencyBtn').disabled = false;
+        document.getElementById('emergencyBtn').textContent = 'Emergency';
+      }
+    }
+
+    function showStatus(message, type) {
+      const el = document.getElementById('statusMessage');
+      el.innerHTML = `<div class="status ${type}">${message}</div>`;
+      if (type === 'success') setTimeout(() => { el.innerHTML = ''; }, 4000);
+    }
+
+    async function loadTotalStaked() {
+      try {
+        const rpcProvider = new ethers.JsonRpcProvider(BSC_RPC);
+        const stakingC = new ethers.Contract(STAKING_CONTRACT, STAKING_ABI, rpcProvider);
+        
+        const totalStaked = await stakingC.getTotalStakedAllPools().catch(() => 0n);
+        
+        const totalStakedEl = document.querySelector('.total-staked');
+        if (totalStaked === 0n) {
+          totalStakedEl.style.display = 'none';
+        } else {
+          totalStakedEl.style.display = 'flex';
+          document.getElementById('totalStaked').textContent = formatTokens(totalStaked) + ' ASTHER';
+        }
+      } catch (error) {
+        console.error("Error loading total staked:", error);
+        document.querySelector('.total-staked').style.display = 'none';
+      }
+    }
+
+    function loadAllPoolsData() {
+      for (let i = 0; i < POOLS.length; i++) {
+        document.getElementById(`pool${i}Apy`).textContent = `${POOLS[i].apy}%`;
+      }
+      loadPoolData(currentPool);
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', async () => {
+      loadAllPoolsData();
+      loadTotalStaked();
+      
+      // Add click handler for connect button (works better on mobile than inline onclick)
+      const connectBtn = document.getElementById('connectBtn');
+      if (connectBtn) {
+        connectBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          connectWallet();
+        });
+        // Also add touchend for better mobile response
+        connectBtn.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          connectWallet();
+        });
+      }
+      
+      // Auto-connect if wallet already connected
+      if (window.ethereum?.selectedAddress) {
+        await connectWallet();
+      }
+    });
+  </script>
+</body>
+</html>

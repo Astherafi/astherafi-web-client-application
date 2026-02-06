@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astherafi - Solana Swap</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+  <script src="https://terminal.jup.ag/main-v4.js" data-preload></script>
+  <style>
+    :root {
+      --bg: transparent;
+      --card-bg: hsl(222, 47%, 9%);
+      --border: hsl(222, 30%, 14%);
+      --cyan: hsl(185, 85%, 50%);
+      --purple: hsl(270, 70%, 60%);
+      --text: hsl(210, 40%, 98%);
+      --muted: hsl(215, 20%, 55%);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container { max-width: 500px; margin: 0 auto; padding-bottom: 40px; }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 0 4px;
+    }
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .header h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .badge {
+      background: rgba(0, 212, 170, 0.15);
+      color: var(--cyan);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid rgba(0, 212, 170, 0.3);
+    }
+
+    .network-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 10px 14px;
+      background: rgba(0, 212, 170, 0.05);
+      border: 1px solid rgba(0, 212, 170, 0.15);
+      border-radius: 10px;
+    }
+    .network-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+    }
+    .network-info span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .network-info strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    #integrated-terminal {
+      min-height: 500px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: rgba(0, 212, 170, 0.05);
+      border: 1px solid rgba(0, 212, 170, 0.1);
+      border-radius: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .feature-icon {
+      color: var(--cyan);
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .powered-by {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .powered-by a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+
+    .loading-swap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      gap: 16px;
+    }
+    .loading-swap .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top: 3px solid var(--cyan);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-swap p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 12px; }
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <h2>Solana Swap</h2>
+        <p>Powered by Jupiter Aggregator</p>
+      </div>
+      <span class="badge">SOLANA MAINNET</span>
+    </div>
+
+    <div class="network-info">
+      <div class="network-dot"></div>
+      <span>Network: <strong>Solana Mainnet</strong></span>
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden; border: none;">
+      <div id="integrated-terminal">
+        <div class="loading-swap">
+          <div class="spinner"></div>
+          <p>Loading Jupiter Swap...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="features">
+      <div class="feature-item">
+        <svg class="feature-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Best Price Routes</span>
+      </div>
+      <div class="feature-item">
+        <svg class="feature-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Non-Custodial</span>
+      </div>
+      <div class="feature-item">
+        <svg class="feature-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Low Fees</span>
+      </div>
+      <div class="feature-item">
+        <svg class="feature-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>All SOL Tokens</span>
+      </div>
+    </div>
+
+    <p class="powered-by">
+      Swap powered by <a href="https://jup.ag" target="_blank" rel="noopener">Jupiter Aggregator</a> &mdash; Best rates across all Solana DEXs
+    </p>
+  </div>
+
+  <script>
+    function hideJupiterBranding() {
+      const container = document.getElementById('integrated-terminal');
+      if (!container) return;
+
+      const style = document.createElement('style');
+      style.textContent = `
+        #integrated-terminal [class*="Header"],
+        #integrated-terminal > div > div > div:first-child,
+        #integrated-terminal .jupiter-terminal-header {
+          display: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+
+      const observer = new MutationObserver(() => {
+        const allDivs = container.querySelectorAll('div');
+        for (const div of allDivs) {
+          const text = (div.textContent || '').trim();
+          const hasJupLogo = div.querySelector('img[alt*="upiter"], svg');
+          if (hasJupLogo && (text.includes('Jupiter') || text.includes('Dynamic')) && text.includes('Connect Wallet')) {
+            div.style.cssText = 'display: none !important;';
+            break;
+          }
+        }
+      });
+      observer.observe(container, { childList: true, subtree: true });
+      setTimeout(() => observer.disconnect(), 15000);
+    }
+
+    function initJupiter() {
+      if (window.Jupiter) {
+        hideJupiterBranding();
+        window.Jupiter.init({
+          displayMode: "integrated",
+          integratedTargetId: "integrated-terminal",
+          defaultExplorer: "Solscan",
+          formProps: {
+            initialInputMint: "So11111111111111111111111111111111111111112",
+            initialOutputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          },
+        });
+      } else {
+        setTimeout(initJupiter, 500);
+      }
+    }
+
+    window.addEventListener('load', () => {
+      setTimeout(initJupiter, 1000);
+    });
+  </script>
+</body>
+</html>

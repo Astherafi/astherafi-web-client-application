@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Models Pricing - Astherafi</title>
+<meta name="description" content="Browse 200+ AI models available through Astherafi Free API. Compare pricing for GPT, Claude, Gemini, DeepSeek, and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#0b1120;color:#e2e8f0;min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+
+.page-header{background:linear-gradient(180deg,#0f172a 0%,#0b1120 100%);border-bottom:1px solid rgba(34,211,238,0.1);padding:16px 24px;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.header-brand{display:flex;align-items:center;gap:12px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;color:#fff}
+.header-brand img{width:32px;height:32px}
+.header-back{display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:10px;border:1px solid rgba(34,211,238,0.3);background:rgba(6,182,212,0.08);color:#22d3ee;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.header-back:hover{background:rgba(6,182,212,0.15);border-color:#22d3ee}
+
+.hero{text-align:center;padding:48px 24px 32px}
+.hero-badge{display:inline-block;padding:6px 20px;border-radius:20px;border:1px solid rgba(34,211,238,0.3);background:rgba(6,182,212,0.1);color:#22d3ee;font-size:13px;font-weight:600;margin-bottom:16px}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:#fff;margin-bottom:12px}
+.hero p{font-size:16px;color:#94a3b8;max-width:600px;margin:0 auto 24px}
+
+.controls{max-width:1200px;margin:0 auto 24px;padding:0 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.search-box{flex:1;min-width:200px;display:flex;align-items:center;gap:10px;background:#111827;border:1px solid #1e293b;border-radius:12px;padding:10px 16px;transition:border-color 0.2s}
+.search-box:focus-within{border-color:rgba(34,211,238,0.4)}
+.search-box svg{color:#64748b;flex-shrink:0}
+.search-box input{flex:1;background:none;border:none;outline:none;color:#e2e8f0;font-size:14px;font-family:'Inter',sans-serif}
+.search-box input::placeholder{color:#64748b}
+.filter-btn{padding:10px 18px;border-radius:12px;border:1px solid #1e293b;background:#111827;color:#94a3b8;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;white-space:nowrap}
+.filter-btn:hover,.filter-btn.active{border-color:rgba(34,211,238,0.4);color:#22d3ee;background:rgba(6,182,212,0.08)}
+.model-count{font-size:14px;color:#64748b;font-weight:600;padding:10px 0}
+
+.models-grid{max-width:1200px;margin:0 auto;padding:0 24px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+@media(max-width:500px){.models-grid{grid-template-columns:1fr}}
+
+.model-card{background:#111827;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;transition:border-color 0.2s;cursor:default}
+.model-card:hover{border-color:rgba(34,211,238,0.2)}
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px}
+.card-provider{display:flex;align-items:center;gap:8px}
+.card-provider-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.card-provider-name{font-size:12px;color:#94a3b8;font-weight:500}
+.card-ctx{font-size:11px;color:#64748b;font-weight:600;background:#1e293b;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.card-name{font-size:17px;font-weight:700;color:#f1f5f9;margin-bottom:8px;font-family:'Space Grotesk',sans-serif}
+.card-desc{font-size:12px;color:#64748b;line-height:1.5;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-pricing{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.card-price{font-size:12px;font-weight:600}
+.card-price .label{color:#64748b}
+.card-price .val{color:#34d399}
+.card-price .val.output{color:#22d3ee}
+.card-free{font-size:11px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,0.1);padding:3px 10px;border-radius:6px}
+
+.loading{text-align:center;padding:80px 24px;color:#64748b;font-size:16px}
+.loading .spinner{width:40px;height:40px;border:3px solid #1e293b;border-top-color:#22d3ee;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.footer{text-align:center;padding:32px 24px;border-top:1px solid #1e293b;color:#64748b;font-size:13px}
+.footer a{color:#22d3ee}
+</style>
+</head>
+<body>
+<header class="page-header">
+  <div class="header-inner">
+    <a href="/" class="header-brand">
+      <img src="/images/astherafi-logo.png" alt="Astherafi" onerror="this.style.display='none'">
+      Astherafi
+    </a>
+    <a href="/" class="header-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to Home
+    </a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">All Models</div>
+  <h1>Access 200+ AI Models</h1>
+  <p>Browse all available AI models. Hold $ASTHER tokens to get free daily API credits for any model.</p>
+</div>
+
+<div class="controls">
+  <div class="search-box">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="search-input" placeholder="Search models... (e.g. GPT, Claude, Gemini)" data-testid="input-search-models">
+  </div>
+  <button class="filter-btn active" data-filter="all" data-testid="button-filter-all">All</button>
+  <button class="filter-btn" data-filter="free" data-testid="button-filter-free">Free</button>
+  <button class="filter-btn" data-filter="openai" data-testid="button-filter-openai">OpenAI</button>
+  <button class="filter-btn" data-filter="anthropic" data-testid="button-filter-anthropic">Anthropic</button>
+  <button class="filter-btn" data-filter="google" data-testid="button-filter-google">Google</button>
+  <button class="filter-btn" data-filter="meta" data-testid="button-filter-meta">Meta</button>
+  <div class="model-count" id="model-count" data-testid="text-model-count"></div>
+</div>
+
+<div class="models-grid" id="models-grid" data-testid="grid-models">
+  <div class="loading" id="loading"><div class="spinner"></div>Loading models...</div>
+</div>
+
+<div class="footer">
+  <p><a href="/">Astherafi.com</a></p>
+</div>
+
+<script>
+(function() {
+  var allModels = [];
+  var currentFilter = 'all';
+
+  var providerColors = {
+    'openai': '#10a37f',
+    'anthropic': '#d97706',
+    'google': '#4285f4',
+    'meta-llama': '#1877f2',
+    'meta': '#1877f2',
+    'mistralai': '#f97316',
+    'deepseek': '#7c3aed',
+    'x-ai': '#1a1a2e',
+    'xai': '#1a1a2e',
+    'cohere': '#ef4444',
+    'microsoft': '#00a4ef',
+    'qwen': '#7c3aed',
+    'alibaba': '#ff6a00',
+    'moonshot': '#22c55e',
+    'nvidia': '#76b900',
+    'perplexity': '#20b2aa',
+    'databricks': '#e8350d',
+    'nousresearch': '#6366f1'
+  };
+
+  function getProvider(id) {
+    var parts = id.split('/');
+    return parts.length > 1 ? parts[0] : 'unknown';
+  }
+
+  function getProviderDisplay(provider) {
+    var map = {
+      'openai': 'OpenAI', 'anthropic': 'Anthropic', 'google': 'Google',
+      'meta-llama': 'Meta', 'mistralai': 'Mistral AI', 'deepseek': 'DeepSeek',
+      'x-ai': 'xAI', 'cohere': 'Cohere', 'microsoft': 'Microsoft',
+      'qwen': 'Qwen', 'nvidia': 'NVIDIA', 'perplexity': 'Perplexity',
+      'nousresearch': 'Nous', 'databricks': 'Databricks', 'moonshot': 'Moonshot'
+    };
+    return map[provider] || provider.charAt(0).toUpperCase() + provider.slice(1);
+  }
+
+  function getProviderColor(provider) {
+    var p = provider.toLowerCase();
+    for (var key in providerColors) {
+      if (p.indexOf(key) >= 0) return providerColors[key];
+    }
+    var hash = 0;
+    for (var i = 0; i < p.length; i++) hash = p.charCodeAt(i) + ((hash << 5) - hash);
+    var h = Math.abs(hash) % 360;
+    return 'hsl(' + h + ', 60%, 45%)';
+  }
+
+  function formatPrice(p) {
+    if (!p || p === '0') return 'Free';
+    var n = parseFloat(p) * 1000000;
+    if (n < 0.01) return 'Free';
+    return '$' + n.toFixed(4) + '/M';
+  }
+
+  function formatCtx(ctx) {
+    if (!ctx) return '';
+    if (ctx >= 1000000) return (ctx / 1000000).toFixed(1) + 'M';
+    if (ctx >= 1000) return (ctx / 1000).toFixed(1) + 'K';
+    return ctx.toString();
+  }
+
+  function isFree(m) {
+    return (!m.pricing || (!m.pricing.prompt || m.pricing.prompt === '0') && (!m.pricing.completion || m.pricing.completion === '0'));
+  }
+
+  var modelsLang = localStorage.getItem('astherafi-lang') || 'en';
+  var modelsT = {
+    zh: {
+      'All Models': '\u6240\u6709\u6A21\u578B',
+      'Access 200+ AI Models': '\u8BBF\u95EE 200+ AI \u6A21\u578B',
+      'Browse all available AI models. Hold $ASTHER tokens to get free daily API credits for any model.': '\u6D4F\u89C8\u6240\u6709\u53EF\u7528 AI \u6A21\u578B\u3002\u6301\u6709 $ASTHER \u4EE3\u5E01\u53EF\u83B7\u5F97\u514D\u8D39\u6BCF\u65E5 API \u989D\u5EA6\u3002',
+      'Search models... (e.g. GPT, Claude, Gemini)': '\u641C\u7D22\u6A21\u578B... (\u4F8B\u5982 GPT, Claude, Gemini)',
+      'Loading models...': '\u52A0\u8F7D\u6A21\u578B\u4E2D...',
+      'Failed to load models. Please try again later.': '\u52A0\u8F7D\u6A21\u578B\u5931\u8D25\u3002\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002',
+      'Back to Home': '\u8FD4\u56DE\u9996\u9875',
+      'models found': '\u4E2A\u6A21\u578B',
+      'Free': '\u514D\u8D39',
+      'Input': '\u8F93\u5165',
+      'Output': '\u8F93\u51FA',
+      'No models found matching your search.': '\u672A\u627E\u5230\u5339\u914D\u7684\u6A21\u578B\u3002',
+      'FREE': '\u514D\u8D39'
+    },
+    ar: {
+      'All Models': '\u062C\u0645\u064A\u0639 \u0627\u0644\u0646\u0645\u0627\u0630\u062C',
+      'Access 200+ AI Models': '\u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 200+ \u0646\u0645\u0648\u0630\u062C \u0630\u0643\u0627\u0621 \u0627\u0635\u0637\u0646\u0627\u0639\u064A',
+      'Browse all available AI models. Hold $ASTHER tokens to get free daily API credits for any model.': '\u062A\u0635\u0641\u062D \u062C\u0645\u064A\u0639 \u0646\u0645\u0627\u0630\u062C AI \u0627\u0644\u0645\u062A\u0627\u062D\u0629. \u0627\u062D\u062A\u0641\u0638 \u0628\u0631\u0645\u0648\u0632 $ASTHER \u0644\u0644\u062D\u0635\u0648\u0644 \u0639\u0644\u0649 \u0631\u0635\u064A\u062F API \u0645\u062C\u0627\u0646\u064A \u064A\u0648\u0645\u064A.',
+      'Search models... (e.g. GPT, Claude, Gemini)': '\u0627\u0628\u062D\u062B \u0639\u0646 \u0646\u0645\u0627\u0630\u062C... (\u0645\u062B\u0627\u0644 GPT, Claude, Gemini)',
+      'Loading models...': '\u062C\u0627\u0631\u064A \u062A\u062D\u0645\u064A\u0644 \u0627\u0644\u0646\u0645\u0627\u0630\u062C...',
+      'Failed to load models. Please try again later.': '\u0641\u0634\u0644 \u062A\u062D\u0645\u064A\u0644 \u0627\u0644\u0646\u0645\u0627\u0630\u062C. \u062D\u0627\u0648\u0644 \u0645\u0631\u0629 \u0623\u062E\u0631\u0649 \u0644\u0627\u062D\u0642\u0627\u064B.',
+      'Back to Home': '\u0627\u0644\u0639\u0648\u062F\u0629 \u0644\u0644\u0631\u0626\u064A\u0633\u064A\u0629',
+      'models found': '\u0646\u0645\u0648\u0630\u062C',
+      'Free': '\u0645\u062C\u0627\u0646\u064A',
+      'Input': '\u0625\u062F\u062E\u0627\u0644',
+      'Output': '\u0625\u062E\u0631\u0627\u062C',
+      'No models found matching your search.': '\u0644\u0645 \u064A\u062A\u0645 \u0627\u0644\u0639\u062B\u0648\u0631 \u0639\u0644\u0649 \u0646\u0645\u0627\u0630\u062C \u0645\u0637\u0627\u0628\u0642\u0629.',
+      'FREE': '\u0645\u062C\u0627\u0646\u064A'
+    }
+  };
+  var mDict = modelsT[modelsLang] || {};
+  function mTr(text) { return mDict[text] || text; }
+
+  function renderModels(models) {
+    var grid = document.getElementById('models-grid');
+    var countEl = document.getElementById('model-count');
+    countEl.textContent = models.length + ' ' + mTr('models found');
+
+    if (models.length === 0) {
+      grid.innerHTML = '<div class="loading" style="padding:40px">' + mTr('No models found matching your search.') + '</div>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < models.length; i++) {
+      var m = models[i];
+      var provider = getProvider(m.id);
+      var providerName = getProviderDisplay(provider);
+      var color = getProviderColor(provider);
+      var initial = providerName.charAt(0).toUpperCase();
+      var inputPrice = formatPrice(m.pricing ? m.pricing.prompt : null);
+      var outputPrice = formatPrice(m.pricing ? m.pricing.completion : null);
+      var ctx = formatCtx(m.context_length);
+      var desc = (m.description || '').replace(/</g, '&lt;').substring(0, 120);
+      var free = isFree(m);
+
+      html += '<div class="model-card" data-testid="card-model-' + i + '">' +
+        '<div class="card-top">' +
+          '<div class="card-provider">' +
+            '<div class="card-provider-icon" style="background:' + color + '">' + initial + '</div>' +
+            '<span class="card-provider-name">' + providerName + '</span>' +
+          '</div>' +
+          (ctx ? '<span class="card-ctx">' + ctx + '</span>' : '') +
+        '</div>' +
+        '<div class="card-name">' + (m.name || m.id) + '</div>' +
+        (desc ? '<div class="card-desc">' + desc + '</div>' : '') +
+        '<div class="card-pricing">' +
+          (free ? '<span class="card-free">' + mTr('FREE') + '</span>' :
+            '<span class="card-price"><span class="label">' + mTr('Input') + ' </span><span class="val">' + inputPrice + '</span></span>' +
+            '<span class="card-price"><span class="label">' + mTr('Output') + ' </span><span class="val output">' + outputPrice + '</span></span>') +
+        '</div>' +
+      '</div>';
+    }
+    grid.innerHTML = html;
+  }
+
+  function filterModels() {
+    var query = document.getElementById('search-input').value.toLowerCase().trim();
+    var filtered = allModels.filter(function(m) {
+      var provider = getProvider(m.id).toLowerCase();
+      if (currentFilter === 'free' && !isFree(m)) return false;
+      if (currentFilter !== 'all' && currentFilter !== 'free' && provider.indexOf(currentFilter) < 0) return false;
+      if (query) {
+        var searchStr = ((m.name || '') + ' ' + m.id + ' ' + (m.description || '')).toLowerCase();
+        return searchStr.indexOf(query) >= 0;
+      }
+      return true;
+    });
+    renderModels(filtered);
+  }
+
+  document.getElementById('search-input').addEventListener('input', filterModels);
+
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentFilter = btn.getAttribute('data-filter');
+      filterModels();
+    });
+  });
+
+  if (modelsLang !== 'en') {
+    var heroBadge = document.querySelector('.hero-badge');
+    if (heroBadge) heroBadge.textContent = mTr('All Models');
+    var heroH1 = document.querySelector('.hero h1');
+    if (heroH1) heroH1.textContent = mTr('Access 200+ AI Models');
+    var heroP = document.querySelector('.hero p');
+    if (heroP) heroP.textContent = mTr('Browse all available AI models. Hold $ASTHER tokens to get free daily API credits for any model.');
+    var searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.placeholder = mTr('Search models... (e.g. GPT, Claude, Gemini)');
+    var backLink = document.querySelector('.header-back');
+    if (backLink) {
+      backLink.childNodes.forEach(function(n) {
+        if (n.nodeType === 3 && n.textContent.trim()) n.textContent = '\n      ' + mTr('Back to Home') + '\n    ';
+      });
+    }
+    var freeBtn = document.querySelector('[data-filter="free"]');
+    if (freeBtn) freeBtn.textContent = mTr('Free');
+    if (modelsLang === 'ar') document.body.style.direction = 'rtl';
+  }
+
+  fetch('/api/models')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      allModels = data.data || [];
+      allModels.sort(function(a, b) {
+        var aFree = isFree(a) ? 1 : 0;
+        var bFree = isFree(b) ? 1 : 0;
+        if (aFree !== bFree) return aFree - bFree;
+        return (a.name || a.id).localeCompare(b.name || b.id);
+      });
+      filterModels();
+    })
+    .catch(function() {
+      document.getElementById('models-grid').innerHTML = '<div class="loading">' + mTr('Failed to load models. Please try again later.') + '</div>';
+    });
+})();
+</script>
+</body>
+</html>

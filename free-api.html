@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astherafi - Free API</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f0f2f5;
+      color: #1a1d26;
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    .outer-card {
+      max-width: 720px;
+      margin: 32px auto;
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 4px 40px rgba(100, 100, 200, 0.10);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Purple gradient top bar */
+    .top-bar {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1, #60a5fa);
+      padding: 18px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .top-bar-left { display: flex; align-items: center; gap: 12px; }
+    .top-bar-icon {
+      width: 44px; height: 44px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .top-bar-label { font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 500; }
+    .top-bar-addr { font-size: 15px; font-weight: 700; font-family: 'Space Grotesk', monospace; color: #fff; }
+    .btn-disconnect {
+      padding: 8px 20px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.12);
+      color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+      font-family: 'Inter', sans-serif; backdrop-filter: blur(8px); transition: background 0.2s;
+    }
+    .btn-disconnect:hover { background: rgba(255,255,255,0.22); }
+
+    /* Inner content area */
+    .inner-content { padding: 28px 32px 32px; position: relative; }
+    @media(max-width:500px) { .inner-content { padding: 20px 16px 24px; } }
+
+    /* Connect wallet overlay */
+    .connect-overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(6px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 20; border-radius: 0 0 24px 24px;
+      padding: 40px 24px;
+    }
+    .connect-lock-icon {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 24px rgba(99,102,241,0.3);
+    }
+    .connect-lock-icon svg { width: 40px; height: 40px; }
+    .connect-title {
+      font-size: 22px; font-weight: 700; color: #1a1d26; margin-bottom: 10px; text-align: center;
+    }
+    .connect-desc {
+      font-size: 14px; color: #6b7280; text-align: center; line-height: 1.6; margin-bottom: 4px;
+    }
+    .connect-highlight {
+      font-size: 14px; color: #6366f1; font-weight: 600; text-align: center; margin-bottom: 24px;
+    }
+    .btn-connect {
+      padding: 14px 40px; border-radius: 14px; border: none;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 6px 20px rgba(99,102,241,0.3);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-connect:hover { opacity: 0.92; transform: scale(1.02); }
+    .btn-connect:active { transform: scale(0.98); }
+    .connect-secure {
+      font-size: 12px; color: #9ca3af; margin-top: 14px; display: flex; align-items: center; gap: 6px;
+    }
+
+    /* API Key card section */
+    .api-section { margin-bottom: 24px; }
+    .api-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+    }
+    .api-title {
+      font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #1a1d26;
+    }
+    .api-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-action {
+      padding: 7px 14px; border-radius: 8px;
+      border: 1px solid #e5e7eb; background: #fff;
+      color: #6b7280; font-size: 12px; font-weight: 600; cursor: pointer;
+      font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 5px;
+      transition: all 0.2s;
+    }
+    .btn-action:hover { border-color: #6366f1; color: #6366f1; }
+    .btn-action.green { color: #22c55e; border-color: #22c55e; }
+    .btn-action.green:hover { background: #f0fdf4; }
+    .btn-action.red { color: #ef4444; border-color: #ef4444; }
+    .btn-action.red:hover { background: #fef2f2; }
+
+    .api-key-box {
+      display: flex; align-items: center;
+      background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 10px; gap: 10px;
+    }
+    .api-key-text {
+      flex: 1; font-family: 'Space Grotesk', monospace; font-size: 15px;
+      color: #1a1d26; letter-spacing: 0.3px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    .btn-icon {
+      width: 34px; height: 34px; border-radius: 8px; border: none;
+      background: transparent; color: #9ca3af; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: color 0.2s;
+    }
+    .btn-icon:hover { color: #1a1d26; }
+    .btn-copy {
+      padding: 8px 20px; border-radius: 8px; border: none;
+      background: #6366f1; color: #fff; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: opacity 0.2s;
+    }
+    .btn-copy:hover { opacity: 0.85; }
+    .base-url {
+      font-size: 12px; color: #9ca3af; display: flex; align-items: center; gap: 6px;
+    }
+    .base-url code { color: #6366f1; font-family: 'Space Grotesk', monospace; }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;
+    }
+    @media(max-width:560px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card { border-radius: 14px; padding: 18px 12px; text-align: center; }
+    .stat-card.c-yellow { background: #fef9e7; }
+    .stat-card.c-green { background: #ecfdf5; }
+    .stat-card.c-red { background: #fef2f2; }
+    .stat-card.c-purple { background: #f3f0ff; }
+    .stat-label { font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 6px; }
+    .stat-value { font-size: 24px; font-weight: 800; font-family: 'Space Grotesk', monospace; }
+    .stat-value.v-green { color: #22c55e; }
+    .stat-value.v-red { color: #ef4444; }
+    .stat-value.v-yellow { color: #ca8a04; }
+    .stat-value.v-purple { color: #7c3aed; }
+
+    /* Token status bar */
+    .token-bar {
+      display: flex; align-items: center; gap: 14px;
+      background: #f3f4f6; border-radius: 14px; padding: 16px 20px;
+    }
+    .token-bar-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+      flex-shrink: 0;
+    }
+    .token-bar-info { flex: 1; }
+    .token-bar-title { font-size: 14px; font-weight: 700; color: #1a1d26; }
+    .token-bar-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .progress-track {
+      flex-shrink: 0; width: 100px; height: 8px;
+      background: #e5e7eb; border-radius: 4px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg, #60a5fa, #8b5cf6); transition: width 0.5s ease;
+    }
+    .tier-pct { font-size: 14px; font-weight: 700; color: #1a1d26; min-width: 36px; text-align: right; }
+
+    .hidden { display: none !important; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #1a1d26; color: #fff; padding: 12px 28px; border-radius: 12px;
+      font-size: 13px; font-weight: 600; z-index: 9999; animation: fadeUp 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translate(-50%, 10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="outer-card">
+    <!-- Top bar - always visible -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="top-bar-icon">&#x1F511;</div>
+        <div>
+          <div class="top-bar-label" id="top-bar-label">Connect Wallet for API Key</div>
+          <div class="top-bar-addr" id="top-bar-addr">0x...</div>
+        </div>
+      </div>
+      <button class="btn-disconnect hidden" id="btn-disconnect" onclick="disconnectWallet()">Disconnect</button>
+    </div>
+
+    <!-- Inner content (blurred behind overlay when not connected) -->
+    <div class="inner-content" id="inner-content">
+      <!-- API Key section -->
+      <div class="api-section">
+        <div class="api-header">
+          <div class="api-title">
+            <span>&#x1F511;</span> Your API Key
+          </div>
+          <div class="api-actions">
+            <button class="btn-action" onclick="refreshData()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+              Refresh
+            </button>
+            <button class="btn-action green" onclick="viewLogs()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              View Logs
+            </button>
+            <button class="btn-action red" onclick="regenerateKey()">Regenerate</button>
+          </div>
+        </div>
+        <div class="api-key-box">
+          <div class="api-key-text" id="api-key-display">sk-xxxx............xxxx</div>
+          <button class="btn-icon" onclick="toggleKeyVisibility()" title="Show/Hide">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button class="btn-copy" onclick="copyKey()">Copy</button>
+        </div>
+        <div class="base-url">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Base URL: <code>https://astherafi.com/api/v1</code>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card c-yellow">
+          <div class="stat-label">Daily Limit</div>
+          <div class="stat-value v-green" id="stat-limit">$0.00</div>
+        </div>
+        <div class="stat-card c-green">
+          <div class="stat-label">Remaining</div>
+          <div class="stat-value v-green" id="stat-remaining">$0.00</div>
+        </div>
+        <div class="stat-card c-red">
+          <div class="stat-label">Used Today</div>
+          <div class="stat-value v-red" id="stat-used">$0.00</div>
+        </div>
+        <div class="stat-card c-purple">
+          <div class="stat-label">Tokens Held</div>
+          <div class="stat-value v-yellow" id="stat-tokens">0.00</div>
+        </div>
+      </div>
+
+      <!-- Token status -->
+      <div class="token-bar">
+        <div class="token-bar-icon" id="token-icon" style="background:#fef3c7;">&#x23F3;</div>
+        <div class="token-bar-info">
+          <div class="token-bar-title" id="token-status-title">Hold tokens to get started</div>
+          <div class="token-bar-sub" id="token-status-sub">Buy ASTHER to unlock API access</div>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="tier-progress" style="width:0%"></div></div>
+        <div class="tier-pct" id="tier-pct">0%</div>
+      </div>
+
+      <!-- Connect overlay (shown when not connected) -->
+      <div class="connect-overlay" id="connect-overlay">
+        <div class="connect-lock-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="11" width="18" height="11" rx="2" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="1.5" fill="#92400e"/>
+          </svg>
+        </div>
+        <div class="connect-title">Free API Key</div>
+        <div class="connect-desc">Hold $ASTHER tokens to receive daily free credits.</div>
+        <div class="connect-highlight">$10 Holding Value = $1 Daily Credit</div>
+        <div style="padding:14px 28px;border-radius:14px;background:linear-gradient(135deg,#1e293b,#334155);color:#94a3b8;font-size:16px;font-weight:700;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:10px;border:1px solid #475569;cursor:default">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Coming Soon
+        </div>
+        <div class="connect-secure" style="margin-top:16px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" fill="#f59e0b"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#f59e0b" stroke-width="2"/></svg>
+          Wallet connect will be enabled after token launch
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ASTHER_CONTRACT = '0x277204675524B49D417bD0B374A1FB09465F7777';
+    const BSC_CHAIN_ID = '0x38';
+    const BSC_RPC = 'https://bsc-dataseed.binance.org/';
+    const ERC20_ABI = ['function balanceOf(address) view returns (uint256)','function decimals() view returns (uint8)'];
+
+    let walletAddress = null;
+    let apiKeyFull = null;
+    let keyVisible = false;
+
+    function shortAddr(a) { return a.slice(0,6)+'...'+a.slice(-4); }
+    function maskKey(k) { return k.slice(0,6)+'\u2022'.repeat(12)+k.slice(-4); }
+
+    function showToast(msg) {
+      var t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(function(){ t.remove(); }, 2500);
+    }
+
+    async function connectWallet() {
+      showToast('Coming Soon'); return;
+      if (!window.ethereum) {
+        showToast('Please install MetaMask or a Web3 wallet');
+        return;
+      }
+      try {
+        var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (!accounts || accounts.length === 0) return;
+
+        try {
+          await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BSC_CHAIN_ID }] });
+        } catch(switchErr) {
+          if (switchErr.code === 4902) {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{ chainId: BSC_CHAIN_ID, chainName: 'BNB Smart Chain', nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 }, rpcUrls: ['https://bsc-dataseed.binance.org/'], blockExplorerUrls: ['https://bscscan.com'] }]
+            });
+          }
+        }
+
+        walletAddress = accounts[0];
+        document.getElementById('top-bar-label').textContent = 'Wallet Connected';
+        document.getElementById('top-bar-addr').textContent = shortAddr(walletAddress);
+        document.getElementById('top-bar-addr').style.fontSize = '17px';
+        document.getElementById('btn-disconnect').classList.remove('hidden');
+        document.getElementById('connect-overlay').classList.add('hidden');
+
+        await loadWalletData();
+      } catch(err) {
+        showToast('Connection failed: ' + (err.message || 'Unknown error'));
+      }
+    }
+
+    function disconnectWallet() {
+      walletAddress = null;
+      apiKeyFull = null;
+      keyVisible = false;
+      document.getElementById('top-bar-label').textContent = 'Connect Wallet for API Key';
+      document.getElementById('top-bar-addr').textContent = '0x...';
+      document.getElementById('top-bar-addr').style.fontSize = '15px';
+      document.getElementById('btn-disconnect').classList.add('hidden');
+      document.getElementById('connect-overlay').classList.remove('hidden');
+      document.getElementById('api-key-display').textContent = 'sk-xxxx............xxxx';
+      document.getElementById('stat-limit').textContent = '$0.00';
+      document.getElementById('stat-remaining').textContent = '$0.00';
+      document.getElementById('stat-used').textContent = '$0.00';
+      document.getElementById('stat-tokens').textContent = '0.00';
+      document.getElementById('tier-progress').style.width = '0%';
+      document.getElementById('tier-pct').textContent = '0%';
+    }
+
+    async function getTokenBalance() {
+      try {
+        var provider = new ethers.JsonRpcProvider(BSC_RPC);
+        var contract = new ethers.Contract(ASTHER_CONTRACT, ERC20_ABI, provider);
+        var decimals = await contract.decimals();
+        var balance = await contract.balanceOf(walletAddress);
+        return parseFloat(ethers.formatUnits(balance, decimals));
+      } catch(e) {
+        console.error('Balance check error:', e);
+        return 0;
+      }
+    }
+
+    function getTier(balance) {
+      if (balance >= 100000) return { name: 'Diamond', limit: 15.00, pct: 100 };
+      if (balance >= 10000) return { name: 'Gold', limit: 5.00, pct: 75 };
+      if (balance >= 1000) return { name: 'Silver', limit: 2.00, pct: 50 };
+      if (balance > 0) return { name: 'Basic', limit: 0.50, pct: 25 };
+      return { name: 'None', limit: 0, pct: 0 };
+    }
+
+    async function loadWalletData() {
+      var balance = await getTokenBalance();
+      var tier = getTier(balance);
+
+      document.getElementById('stat-tokens').textContent = balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      document.getElementById('stat-limit').textContent = '$' + tier.limit.toFixed(2);
+      document.getElementById('tier-progress').style.width = tier.pct + '%';
+      document.getElementById('tier-pct').textContent = tier.pct + '%';
+
+      if (balance > 0) {
+        document.getElementById('token-icon').innerHTML = '&#x1F3C6;';
+        document.getElementById('token-icon').style.background = '#ecfdf5';
+        document.getElementById('token-status-title').textContent = tier.name + ' Tier';
+        document.getElementById('token-status-sub').textContent = 'Holding ' + balance.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' ASTHER';
+        await fetchApiKey();
+      } else {
+        document.getElementById('token-icon').innerHTML = '&#x23F3;';
+        document.getElementById('token-icon').style.background = '#fef3c7';
+        document.getElementById('token-status-title').textContent = 'No ASTHER Tokens';
+        document.getElementById('token-status-sub').textContent = 'Buy ASTHER to unlock API access';
+        document.getElementById('api-key-display').textContent = 'Hold ASTHER tokens to get API key';
+        document.getElementById('stat-remaining').textContent = '$0.00';
+        document.getElementById('stat-used').textContent = '$0.00';
+      }
+    }
+
+    async function fetchApiKey() {
+      try {
+        document.getElementById('api-key-display').textContent = 'Loading...';
+        var res = await fetch('/api/free-api/key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wallet: walletAddress })
+        });
+        var data = await res.json();
+        if (data.apiKey) {
+          apiKeyFull = data.apiKey;
+          keyVisible = false;
+          document.getElementById('api-key-display').textContent = maskKey(apiKeyFull);
+          document.getElementById('stat-used').textContent = '$' + (data.usedToday || 0).toFixed(2);
+          var limit = parseFloat(document.getElementById('stat-limit').textContent.replace('$',''));
+          var remaining = Math.max(0, limit - (data.usedToday || 0));
+          document.getElementById('stat-remaining').textContent = '$' + remaining.toFixed(2);
+        } else {
+          document.getElementById('api-key-display').textContent = data.error || 'Error generating key';
+        }
+      } catch(e) {
+        document.getElementById('api-key-display').textContent = 'Failed to load API key';
+      }
+    }
+
+    async function regenerateKey() {
+      if (!walletAddress) return;
+      try {
+        document.getElementById('api-key-display').textContent = 'Regenerating...';
+        var res = await fetch('/api/free-api/regenerate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wallet: walletAddress })
+        });
+        var data = await res.json();
+        if (data.apiKey) {
+          apiKeyFull = data.apiKey;
+          keyVisible = false;
+          document.getElementById('api-key-display').textContent = maskKey(apiKeyFull);
+          showToast('API key regenerated');
+        }
+      } catch(e) {
+        showToast('Failed to regenerate key');
+      }
+    }
+
+    function toggleKeyVisibility() {
+      if (!apiKeyFull) return;
+      keyVisible = !keyVisible;
+      document.getElementById('api-key-display').textContent = keyVisible ? apiKeyFull : maskKey(apiKeyFull);
+    }
+
+    function copyKey() {
+      if (!apiKeyFull) return;
+      navigator.clipboard.writeText(apiKeyFull).then(function(){
+        showToast('API key copied!');
+      });
+    }
+
+    function viewLogs() { showToast('Usage logs coming soon'); }
+
+    async function refreshData() {
+      if (!walletAddress) return;
+      showToast('Refreshing...');
+      await loadWalletData();
+    }
+
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', function(accounts) {
+        if (accounts.length === 0) { disconnectWallet(); }
+        else { walletAddress = accounts[0]; document.getElementById('top-bar-addr').textContent = shortAddr(walletAddress); loadWalletData(); }
+      });
+      window.ethereum.on('chainChanged', function() { if (walletAddress) loadWalletData(); });
+    }
+  </script>
+</body>
+</html>

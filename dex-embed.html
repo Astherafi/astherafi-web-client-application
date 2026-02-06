@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASTHER Dex</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: hsl(222, 47%, 5%);
+      --card-bg: hsl(222, 47%, 9%);
+      --card-bg2: hsl(222, 47%, 7%);
+      --border: hsl(222, 30%, 14%);
+      --cyan: hsl(185, 85%, 50%);
+      --purple: hsl(270, 70%, 60%);
+      --green: hsl(145, 70%, 50%);
+      --red: hsl(0, 80%, 60%);
+      --text: hsl(210, 40%, 98%);
+      --muted: hsl(215, 20%, 55%);
+      --yellow: hsl(45, 95%, 55%);
+      --orange: hsl(25, 90%, 55%);
+      --pink: hsl(330, 80%, 60%);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+      min-height: 100vh;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 32px; flex-wrap: wrap;
+    }
+    .header-mascot {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 800; color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      box-shadow: 0 4px 24px rgba(6,182,212,0.35);
+    }
+    .header-text h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.8rem; font-weight: 700;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .header-text p { font-size: 14px; color: var(--muted); margin-top: 2px; }
+    .header-right {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .badge-sol {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.25);
+      border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: var(--cyan);
+    }
+    .badge-sol .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse-dot 2s infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .contract-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--card-bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 8px 14px;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted);
+    }
+    .contract-badge .label { font-weight: 600; color: var(--cyan); font-family: 'Inter', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .contract-badge .addr { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .copy-btn {
+      background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.25);
+      border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600;
+      color: var(--cyan); cursor: pointer; transition: background 0.2s;
+    }
+    .copy-btn:hover { background: rgba(6,182,212,0.25); }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 12px; margin-bottom: 24px;
+    }
+    @media(max-width:768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px;
+    }
+    .stat-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .stat-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
+    }
+    .stat-icon.green { background: rgba(34,197,94,0.15); color: var(--green); }
+    .stat-icon.cyan { background: rgba(6,182,212,0.15); color: var(--cyan); }
+    .stat-icon.orange { background: rgba(249,115,22,0.15); color: var(--orange); }
+    .stat-icon.pink { background: rgba(236,72,153,0.15); color: var(--pink); }
+    .stat-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .stat-value { font-size: 26px; font-weight: 700; font-family: 'Space Grotesk', monospace; margin-top: 2px; }
+    .stat-value.green { color: var(--green); }
+    .stat-value.red { color: var(--red); }
+    .two-col {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px; margin-bottom: 24px;
+    }
+    @media(max-width:900px) { .two-col { grid-template-columns: 1fr; } }
+    .panel {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px; overflow: hidden;
+    }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .panel-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 17px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .updating-badge {
+      font-size: 11px; color: var(--muted); font-weight: 500;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .updating-badge .spinner {
+      width: 12px; height: 12px; border: 2px solid var(--border);
+      border-top-color: var(--cyan); border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .live-dot-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--muted); font-weight: 500;
+    }
+    .live-dot-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse-dot 2s infinite; }
+    .trending-list { display: flex; flex-direction: column; gap: 6px; }
+    .trend-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--card-bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s;
+      text-decoration: none; color: inherit;
+    }
+    .trend-row:hover { border-color: rgba(6,182,212,0.3); background: hsl(222, 47%, 11%); }
+    .trend-rank { font-size: 13px; font-weight: 700; color: var(--muted); min-width: 22px; }
+    .trend-rank.gold { color: var(--yellow); }
+    .trend-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .trend-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .trend-info { flex: 1; min-width: 0; }
+    .trend-name {
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; gap: 6px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .trend-name .sep { color: var(--muted); font-weight: 400; }
+    .trend-name .full { color: var(--muted); font-weight: 400; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+    .trend-meta {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: var(--muted); margin-top: 2px;
+    }
+    .trend-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+    .trend-price-col { text-align: right; }
+    .trend-price { font-size: 14px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .trend-subprice { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .trend-change { font-size: 13px; font-weight: 600; min-width: 70px; text-align: right; display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+    .trend-change.pos { color: var(--green); }
+    .trend-change.neg { color: var(--red); }
+    .trend-ext {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--cyan); flex-shrink: 0;
+    }
+    .listings-list { display: flex; flex-direction: column; gap: 6px; }
+    .listing-row {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--card-bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s;
+      text-decoration: none; color: inherit;
+    }
+    .listing-row:hover { border-color: rgba(6,182,212,0.3); background: hsl(222, 47%, 11%); }
+    .listing-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #fff;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .listing-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .listing-info { flex: 1; min-width: 0; }
+    .listing-name { font-size: 14px; font-weight: 700; }
+    .listing-time { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+    .listing-time .bot { color: var(--cyan); font-weight: 600; }
+    .listing-right { text-align: right; flex-shrink: 0; }
+    .listing-vol { font-size: 14px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .listing-change { font-size: 12px; font-weight: 600; margin-top: 2px; }
+    .listing-change.pos { color: var(--green); }
+    .listing-change.neg { color: var(--red); }
+    .swap-section {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px; margin-bottom: 20px; text-align: center;
+    }
+    .swap-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px; font-weight: 700; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .swap-desc { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+    .swap-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 36px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 4px 24px rgba(6,182,212,0.3);
+    }
+    .swap-btn:hover { opacity: 0.9; transform: scale(1.02); }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media(max-width:768px) { .features-grid { grid-template-columns: 1fr; } }
+    .feature-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px; text-align: center;
+    }
+    .feature-icon {
+      width: 48px; height: 48px; margin: 0 auto 14px;
+      background: rgba(6,182,212,0.1); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .feature-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .feature-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .skeleton { background: linear-gradient(90deg, hsl(222,47%,12%) 25%, hsl(222,47%,16%) 50%, hsl(222,47%,12%) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-mascot">A</div>
+      <div class="header-text">
+        <h1>ASTHER Dex</h1>
+        <p>All ASTHER Tokens &bull; One Dex</p>
+      </div>
+      <div class="header-right">
+        <div class="contract-badge" id="contract-section" style="display:none;">
+          <span class="label">Contract</span>
+          <span class="addr" id="contract-addr"></span>
+          <button class="copy-btn" onclick="copyContract()" data-testid="button-copy-contract">Copy</button>
+        </div>
+        <div class="badge-sol"><span class="dot"></span> Solana Network</div>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10l4-4 4 4"/></svg></div>
+          <span class="stat-label">Total Market Cap</span>
+        </div>
+        <div class="stat-value" id="stat-mcap"><div class="skeleton" style="height:30px;width:120px"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon cyan"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/></svg></div>
+          <span class="stat-label">24h Volume</span>
+        </div>
+        <div class="stat-value" id="stat-vol"><div class="skeleton" style="height:30px;width:100px"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon orange"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+          <span class="stat-label">Active Tokens</span>
+        </div>
+        <div class="stat-value" id="stat-tokens"><div class="skeleton" style="height:30px;width:60px"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon pink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+          <span class="stat-label">Avg 24h Change</span>
+        </div>
+        <div class="stat-value" id="stat-change"><div class="skeleton" style="height:30px;width:80px"></div></div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3.5-7.5-.67 2 .5 3.5 1.5 4.5 1 1 2 2.17 2 4a4.5 4.5 0 0 1-9 0Z"/></svg>
+            Trending Tokens
+          </div>
+          <div class="updating-badge"><div class="spinner"></div> Updating...</div>
+        </div>
+        <div class="trending-list" id="trending-list">
+          <div class="trend-row"><div class="skeleton" style="height:36px;width:100%"></div></div>
+          <div class="trend-row"><div class="skeleton" style="height:36px;width:100%"></div></div>
+          <div class="trend-row"><div class="skeleton" style="height:36px;width:100%"></div></div>
+          <div class="trend-row"><div class="skeleton" style="height:36px;width:100%"></div></div>
+          <div class="trend-row"><div class="skeleton" style="height:36px;width:100%"></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="2"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a.53.53 0 0 0 .4.29l5.16.756a.53.53 0 0 1 .294.904l-3.733 3.638a.53.53 0 0 0-.152.469l.882 5.14a.53.53 0 0 1-.77.56l-4.614-2.426a.53.53 0 0 0-.494 0L6.14 18.73a.53.53 0 0 1-.77-.56l.882-5.14a.53.53 0 0 0-.152-.469L2.367 8.924a.53.53 0 0 1 .294-.904l5.16-.756a.53.53 0 0 0 .4-.29l2.31-4.679Z"/></svg>
+            New Listings
+          </div>
+          <div class="live-dot-badge"><span class="dot"></span> Live</div>
+        </div>
+        <div class="listings-list" id="listings-list">
+          <div class="listing-row"><div class="skeleton" style="height:40px;width:100%"></div></div>
+          <div class="listing-row"><div class="skeleton" style="height:40px;width:100%"></div></div>
+          <div class="listing-row"><div class="skeleton" style="height:40px;width:100%"></div></div>
+          <div class="listing-row"><div class="skeleton" style="height:40px;width:100%"></div></div>
+          <div class="listing-row"><div class="skeleton" style="height:40px;width:100%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="swap-section">
+      <div class="swap-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3l4 4-4 4"/><path d="M20 7H4"/><path d="M8 21l-4-4 4-4"/><path d="M4 17h16"/></svg>
+        Swap Tokens
+      </div>
+      <div class="swap-desc">Trade any Solana token instantly</div>
+      <button class="swap-btn" onclick="openSwap()" data-testid="button-swap">
+        <img src="https://jup.ag/svg/jupiter-logo.svg" alt="" style="width:20px;height:20px;">
+        Trade on Jupiter
+      </button>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div class="feature-title">Lightning Fast</div>
+        <div class="feature-desc">Instant token swaps with optimized routing for the best rates</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="feature-title">Secure Trading</div>
+        <div class="feature-desc">Non-custodial swaps with transparent fees you can trust</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        <div class="feature-title">Low Fees</div>
+        <div class="feature-desc">Competitive rates with minimal slippage on every trade</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var ASTHER_SOL_CONTRACT = '';
+    var JUPITER_URL = 'https://jup.ag/swap/SOL-?ref=p7mgqhybhrx3';
+
+    function fmt(n) {
+      if (n === null || n === undefined || isNaN(n)) return '$0';
+      if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+      if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+      if (n >= 1e3) return '$' + (n / 1e3).toFixed(2) + 'K';
+      return '$' + n.toFixed(2);
+    }
+    function fmtPrice(n) {
+      if (!n || isNaN(n)) return '$0';
+      if (n < 0.0000001) return '$' + n.toExponential(2);
+      if (n < 0.001) return '$' + n.toFixed(7);
+      if (n < 1) return '$' + n.toFixed(4);
+      return '$' + n.toFixed(2);
+    }
+    function timeAgo(ts) {
+      if (!ts) return '';
+      var diff = Date.now() - ts;
+      var mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return mins + ' minutes ago';
+      var hrs = Math.floor(mins / 60);
+      if (hrs === 1) return 'about 1 hour ago';
+      if (hrs < 24) return 'about ' + hrs + ' hours ago';
+      var days = Math.floor(hrs / 24);
+      return days + ' days ago';
+    }
+
+    function copyContract() {
+      if (!ASTHER_SOL_CONTRACT) return;
+      navigator.clipboard.writeText(ASTHER_SOL_CONTRACT).then(function() {
+        var btn = document.querySelector('.copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+      });
+    }
+
+    function openSwap() {
+      if (ASTHER_SOL_CONTRACT) {
+        window.open(JUPITER_URL + ASTHER_SOL_CONTRACT, '_blank');
+      } else {
+        window.open('https://jup.ag/?ref=p7mgqhybhrx3', '_blank');
+      }
+    }
+
+    if (ASTHER_SOL_CONTRACT) {
+      document.getElementById('contract-section').style.display = 'inline-flex';
+      document.getElementById('contract-addr').textContent = ASTHER_SOL_CONTRACT;
+    }
+
+    var arrowUp = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>';
+    var arrowDown = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>';
+    var extIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+    var pairsIcon = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+    var volIcon = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>';
+
+    async function fetchSolanaBoosts() {
+      try {
+        var resp = await fetch('https://api.dexscreener.com/token-boosts/top/v1');
+        var data = await resp.json();
+        return (data || []).filter(function(t) { return t.chainId === 'solana'; });
+      } catch(e) { return []; }
+    }
+
+    async function fetchTokenPairs(addresses) {
+      if (!addresses.length) return [];
+      var chunks = [];
+      for (var i = 0; i < addresses.length; i += 30) {
+        chunks.push(addresses.slice(i, i + 30));
+      }
+      var allPairs = [];
+      for (var c = 0; c < chunks.length; c++) {
+        try {
+          var resp = await fetch('https://api.dexscreener.com/latest/dex/tokens/' + chunks[c].join(','));
+          var data = await resp.json();
+          if (data.pairs) allPairs = allPairs.concat(data.pairs);
+        } catch(e) {}
+      }
+      return allPairs;
+    }
+
+    async function fetchNewPairs() {
+      try {
+        var resp = await fetch('https://api.dexscreener.com/token-boosts/latest/v1');
+        var data = await resp.json();
+        var solTokens = (data || []).filter(function(t) { return t.chainId === 'solana'; });
+        var addrs = [];
+        solTokens.forEach(function(t) {
+          if (t.tokenAddress && addrs.indexOf(t.tokenAddress) === -1) addrs.push(t.tokenAddress);
+        });
+        if (addrs.length === 0) return [];
+        var pairs = await fetchTokenPairs(addrs.slice(0, 30));
+        return pairs.filter(function(p) { return p.chainId === 'solana'; });
+      } catch(e) { return []; }
+    }
+
+    function buildTokenMap(pairs) {
+      var tokenMap = {};
+      pairs.forEach(function(pair) {
+        if (pair.chainId !== 'solana') return;
+        var addr = pair.baseToken ? pair.baseToken.address : null;
+        if (!addr) return;
+        if (!tokenMap[addr]) {
+          tokenMap[addr] = {
+            symbol: pair.baseToken.symbol,
+            name: pair.baseToken.name,
+            address: addr,
+            pairs: [],
+            totalVol: 0,
+            mcap: 0,
+            priceUsd: 0,
+            priceChange: 0,
+            iconUrl: (pair.info && pair.info.imageUrl) || '',
+            pairCreatedAt: pair.pairCreatedAt || 0
+          };
+        }
+        tokenMap[addr].pairs.push(pair);
+        var vol = (pair.volume && pair.volume.h24) || 0;
+        tokenMap[addr].totalVol += vol;
+        var mc = pair.marketCap || pair.fdv || 0;
+        if (mc > tokenMap[addr].mcap) tokenMap[addr].mcap = mc;
+        if (pair.priceUsd) tokenMap[addr].priceUsd = parseFloat(pair.priceUsd);
+        var pc = pair.priceChange && pair.priceChange.h24 ? parseFloat(pair.priceChange.h24) : 0;
+        if (Math.abs(pc) > Math.abs(tokenMap[addr].priceChange)) tokenMap[addr].priceChange = pc;
+        if (pair.pairCreatedAt && pair.pairCreatedAt > tokenMap[addr].pairCreatedAt) {
+          tokenMap[addr].pairCreatedAt = pair.pairCreatedAt;
+        }
+        if (!tokenMap[addr].iconUrl && pair.info && pair.info.imageUrl) {
+          tokenMap[addr].iconUrl = pair.info.imageUrl;
+        }
+      });
+      return tokenMap;
+    }
+
+    async function loadSolanaTokens() {
+      try {
+        var boosts = await fetchSolanaBoosts();
+        var boostAddresses = [];
+        var boostIcons = {};
+        boosts.forEach(function(b) {
+          if (b.tokenAddress && boostAddresses.indexOf(b.tokenAddress) === -1) {
+            boostAddresses.push(b.tokenAddress);
+            if (b.icon) boostIcons[b.tokenAddress] = b.icon;
+          }
+        });
+
+        var trendingPairs = await fetchTokenPairs(boostAddresses.slice(0, 30));
+        var newPairs = await fetchNewPairs();
+
+        var trendingMap = buildTokenMap(trendingPairs);
+        Object.keys(boostIcons).forEach(function(addr) {
+          if (trendingMap[addr] && !trendingMap[addr].iconUrl) {
+            trendingMap[addr].iconUrl = boostIcons[addr];
+          }
+        });
+
+        var newMap = buildTokenMap(newPairs);
+        var allTokenMap = {};
+        Object.keys(trendingMap).forEach(function(k) { allTokenMap[k] = trendingMap[k]; });
+        Object.keys(newMap).forEach(function(k) {
+          if (!allTokenMap[k]) allTokenMap[k] = newMap[k];
+        });
+
+        var allTokens = Object.values(allTokenMap);
+        var trendingTokens = Object.values(trendingMap);
+        var newTokens = Object.values(newMap);
+
+        var totalMcap = 0;
+        var totalVol = 0;
+        var totalChange = 0;
+        var changeCount = 0;
+        allTokens.forEach(function(t) {
+          totalMcap += t.mcap;
+          totalVol += t.totalVol;
+          if (t.priceChange !== 0) { totalChange += t.priceChange; changeCount++; }
+        });
+        var avgChange = changeCount > 0 ? totalChange / changeCount : 0;
+
+        document.getElementById('stat-mcap').textContent = fmt(totalMcap);
+        document.getElementById('stat-vol').textContent = fmt(totalVol);
+        document.getElementById('stat-tokens').textContent = String(allTokens.length);
+        var changeEl = document.getElementById('stat-change');
+        changeEl.textContent = (avgChange >= 0 ? '+' : '') + avgChange.toFixed(2) + '%';
+        changeEl.className = 'stat-value ' + (avgChange >= 0 ? 'green' : 'red');
+
+        var trending = trendingTokens.slice().sort(function(a, b) { return b.totalVol - a.totalVol; });
+        if (trending.length === 0) {
+          trending = allTokens.slice().sort(function(a, b) { return b.totalVol - a.totalVol; });
+        }
+
+        var trendHtml = '';
+        trending.slice(0, 5).forEach(function(token, i) {
+          var pairUrl = token.pairs[0] ? (token.pairs[0].url || ('https://dexscreener.com/solana/' + token.address)) : ('https://dexscreener.com/solana/' + token.address);
+          var priceNative = token.priceUsd < 0.001 ? '$' + token.priceUsd.toExponential(2) : '';
+
+          trendHtml += '<a href="' + pairUrl + '" target="_blank" rel="noopener" class="trend-row" data-testid="trending-pair-' + i + '">' +
+            '<span class="trend-rank' + (i === 0 ? ' gold' : '') + '">#' + (i + 1) + '</span>' +
+            '<div class="trend-icon">' + (token.iconUrl ? '<img src="' + token.iconUrl + '" alt="" onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + token.symbol.charAt(0) + '\'">' : token.symbol.charAt(0)) + '</div>' +
+            '<div class="trend-info"><div class="trend-name"><strong>' + token.symbol + '</strong> <span class="sep">/</span> <span class="full">' + token.name.substring(0, 16) + '</span></div>' +
+            '<div class="trend-meta"><span>' + pairsIcon + ' ' + token.pairs.length + '</span><span>' + volIcon + ' ' + fmt(token.totalVol) + '</span></div></div>' +
+            '<div class="trend-right">' +
+            '<div class="trend-price-col"><div class="trend-price">' + fmtPrice(token.priceUsd) + '</div>' +
+            (priceNative ? '<div class="trend-subprice">' + priceNative + '</div>' : '') + '</div>' +
+            '<div class="trend-change ' + (token.priceChange >= 0 ? 'pos' : 'neg') + '">' + (token.priceChange >= 0 ? arrowUp : arrowDown) + ' ' + (token.priceChange >= 0 ? '+' : '') + token.priceChange.toFixed(2) + '%</div>' +
+            '<div class="trend-ext">' + extIcon + '</div>' +
+            '</div></a>';
+        });
+        document.getElementById('trending-list').innerHTML = trendHtml || '<div class="empty-state">No trending tokens.</div>';
+
+        var recent = newTokens.length > 0
+          ? newTokens.slice().sort(function(a, b) { return b.pairCreatedAt - a.pairCreatedAt; })
+          : allTokens.slice().sort(function(a, b) { return b.pairCreatedAt - a.pairCreatedAt; });
+
+        var listHtml = '';
+        recent.slice(0, 5).forEach(function(token, i) {
+          var pairUrl = token.pairs[0] ? (token.pairs[0].url || ('https://dexscreener.com/solana/' + token.address)) : ('https://dexscreener.com/solana/' + token.address);
+          var botName = i % 2 === 0 ? 'Lumi' : 'Milo';
+
+          listHtml += '<a href="' + pairUrl + '" target="_blank" rel="noopener" class="listing-row" data-testid="listing-pair-' + i + '">' +
+            '<div class="listing-icon">' + (token.iconUrl ? '<img src="' + token.iconUrl + '" alt="" onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + token.symbol.charAt(0) + '\'">' : token.symbol.charAt(0)) + '</div>' +
+            '<div class="listing-info"><div class="listing-name">' + token.symbol + '</div>' +
+            '<div class="listing-time"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> ' + timeAgo(token.pairCreatedAt) + ' <span class="bot">' + botName + '</span></div></div>' +
+            '<div class="listing-right"><div class="listing-vol">' + fmt(token.totalVol) + '</div>' +
+            '<div class="listing-change ' + (token.priceChange >= 0 ? 'pos' : 'neg') + '">' + (token.priceChange >= 0 ? arrowUp : arrowDown) + ' ' + (token.priceChange >= 0 ? '+' : '') + token.priceChange.toFixed(2) + '%</div></div></a>';
+        });
+        document.getElementById('listings-list').innerHTML = listHtml || '<div class="empty-state">No new listings.</div>';
+
+        document.querySelector('.updating-badge').innerHTML = '<div class="spinner"></div> Updated';
+        setTimeout(function() {
+          var ub = document.querySelector('.updating-badge');
+          if (ub) ub.innerHTML = '<div class="spinner"></div> Updating...';
+        }, 3000);
+
+      } catch (e) {
+        console.error('Failed to load Solana token data:', e);
+        document.getElementById('stat-mcap').textContent = '--';
+        document.getElementById('stat-vol').textContent = '--';
+        document.getElementById('stat-tokens').textContent = '--';
+        document.getElementById('stat-change').textContent = '--';
+        document.getElementById('trending-list').innerHTML = '<div class="empty-state">Failed to load data. Please refresh.</div>';
+        document.getElementById('listings-list').innerHTML = '';
+      }
+    }
+
+    loadSolanaTokens();
+    setInterval(loadSolanaTokens, 30000);
+  </script>
+</body>
+</html>

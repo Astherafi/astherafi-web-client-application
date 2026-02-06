@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+    <meta property="og:title" content="Astherafi" />
+    <meta property="og:description" content="Astherafi - AI-Powered Decentralized Finance with Token Analyzer, Token Swap, Token Generator, and more blockchain utilities." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://astherafi.com/opengraph.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@astherafi" />
+    <meta name="twitter:title" content="Astherafi" />
+    <meta name="twitter:description" content="Astherafi - AI-Powered Decentralized Finance with Token Analyzer, Token Swap, Token Generator, and more blockchain utilities." />
+    <meta name="twitter:image" content="https://astherafi.com/opengraph.jpg" />
+
+    <link rel="icon" type="image/png" href="/assets/image_1768380685328-CnPTMe63.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>Astherafi</title>
+    <script type="module" crossorigin src="/assets/index-DzcR72z9.js"></script>
+    <script defer src="/ai-chat-init.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CN7p13Na.css">
+  </head>
+  <body class="dark">
+    <div id="root"></div>
+    <script>
+      // Inject staking functionality into dashboard
+      (function() {
+        const observer = new MutationObserver(function(mutations) {
+          // Handle homepage modifications (hide tokenomics, inject Free API)
+          handleHomepageMods();
+          
+          // Handle docs page modifications
+          handleDocsMods();
+          
+          // Change Staking "Soon" badge to "Live"
+          const navItems = document.querySelectorAll('a, button, div');
+          navItems.forEach(item => {
+            if (item.textContent.includes('Staking') && item.textContent.includes('Soon')) {
+              const badge = item.querySelector('span, div');
+              if (badge && badge.textContent.trim() === 'Soon') {
+                badge.textContent = 'Live';
+                badge.style.background = 'linear-gradient(135deg, hsl(185, 85%, 50%), hsl(140, 70%, 50%))';
+                badge.style.color = 'hsl(222, 47%, 6%)';
+                badge.style.animation = 'pulse-live 2s ease-in-out infinite';
+                badge.style.boxShadow = '0 0 8px hsl(185, 85%, 50%)';
+              }
+            }
+          });
+          // Also find badges by class
+          document.querySelectorAll('[class*="badge"], [class*="pill"], span').forEach(el => {
+            if (el.textContent.trim() === 'Soon') {
+              const parent = el.closest('a, button, div[role="button"]');
+              if (parent && parent.textContent.includes('Staking')) {
+                el.textContent = 'Live';
+                el.style.background = 'linear-gradient(135deg, hsl(185, 85%, 50%), hsl(140, 70%, 50%))';
+                el.style.color = 'hsl(222, 47%, 6%)';
+                el.style.animation = 'pulse-live 2s ease-in-out infinite';
+                el.style.boxShadow = '0 0 8px hsl(185, 85%, 50%)';
+              }
+            }
+          });
+          
+          // Hide Token Swap from sidebar
+          hideTokenSwap();
+          
+          // Inject ASTHER Dex as a NEW sidebar item + handle its content
+          injectAstherDexSidebar();
+
+          // Add pulse animation CSS if not exists
+          if (!document.getElementById('live-badge-styles')) {
+            const style = document.createElement('style');
+            style.id = 'live-badge-styles';
+            style.textContent = `
+              @keyframes pulse-live {
+                0%, 100% { opacity: 1; box-shadow: 0 0 8px hsl(185, 85%, 50%); }
+                50% { opacity: 0.8; box-shadow: 0 0 16px hsl(185, 85%, 50%), 0 0 24px hsl(140, 70%, 50%); }
+              }
+            `;
+            document.head.appendChild(style);
+          }
+
+          // Find the staking "Coming Soon" section and replace it
+          const buttons = document.querySelectorAll('button');
+          buttons.forEach(btn => {
+            if (btn.textContent.trim() === 'Coming Soon' && btn.closest('div')?.querySelector('h2, h3, p')?.textContent?.includes('Staking')) {
+              const container = btn.closest('div[class*="rounded"]');
+              if (container && !container.dataset.stakingInjected) {
+                container.dataset.stakingInjected = 'true';
+                injectStaking(container.parentElement || container);
+              }
+            }
+          });
+          
+          // Also check for the main content area with Staking title
+          const headings = document.querySelectorAll('h1, h2, h3');
+          headings.forEach(h => {
+            if (h.textContent.trim() === 'Staking') {
+              const parent = h.closest('main, div[class*="flex-1"]');
+              if (parent) {
+                const comingSoon = parent.querySelector('button');
+                if (comingSoon && comingSoon.textContent.includes('Coming Soon') && !parent.dataset.stakingInjected) {
+                  parent.dataset.stakingInjected = 'true';
+                  const wrapper = comingSoon.closest('div[class*="rounded"]')?.parentElement;
+                  if (wrapper) {
+                    injectStaking(wrapper);
+                  }
+                }
+              }
+            }
+          });
+        });
+
+        function injectStaking(container) {
+          container.innerHTML = `
+            <iframe 
+              src="/staking-embed.html" 
+              style="width: 100%; height: 100%; min-height: 950px; border: none; border-radius: 12px;"
+              title="Staking"
+            ></iframe>
+          `;
+        }
+
+        function hideTokenSwap() {
+          document.querySelectorAll('button').forEach(function(btn) {
+            var txt = btn.textContent.trim();
+            if (txt.includes('Token Swap') && !btn.dataset.swapHidden) {
+              btn.dataset.swapHidden = 'true';
+              btn.style.display = 'none';
+            }
+          });
+        }
+
+        function injectAstherDexSidebar() {
+          if (document.getElementById('asther-dex-btn')) return;
+          
+          var sidebar = document.querySelector('nav[class*="flex"][class*="flex-col"]');
+          if (!sidebar) {
+            document.querySelectorAll('nav').forEach(function(n) {
+              if (n.querySelectorAll('button').length >= 5) {
+                var hasStaking = false;
+                n.querySelectorAll('button').forEach(function(b) {
+                  if (b.textContent.includes('Staking')) hasStaking = true;
+                });
+                if (hasStaking) sidebar = n;
+              }
+            });
+          }
+          if (!sidebar) {
+            var toggleBtn = document.querySelector('[data-testid="button-toggle-sidebar"]');
+            if (toggleBtn) {
+              var container = toggleBtn.closest('div[class*="flex"][class*="flex-col"]');
+              if (container) {
+                container.querySelectorAll('nav').forEach(function(n) { sidebar = n; });
+                if (!sidebar) sidebar = container;
+              }
+            }
+          }
+          if (!sidebar) return;
+
+          var refBtn = null;
+          sidebar.querySelectorAll('button').forEach(function(b) {
+            var txt = b.textContent.trim();
+            if (txt.includes('Staking')) refBtn = b;
+          });
+          if (!refBtn) return;
+          
+          var newBtn = refBtn.cloneNode(true);
+          newBtn.id = 'asther-dex-btn';
+          newBtn.setAttribute('data-testid', 'nav-asther-dex');
+          
+          var allSpans = newBtn.querySelectorAll('span');
+          allSpans.forEach(function(s) {
+            var txt = s.textContent.trim();
+            if (txt === 'Staking') {
+              s.textContent = 'ASTHER Dex';
+            }
+            if (txt === 'Soon' || txt === 'Live') {
+              s.textContent = 'Live';
+              s.style.background = 'linear-gradient(135deg, hsl(185, 85%, 50%), hsl(140, 70%, 50%))';
+              s.style.color = 'hsl(222, 47%, 6%)';
+              s.style.animation = 'pulse-live 2s ease-in-out infinite';
+              s.style.boxShadow = '0 0 8px hsl(185, 85%, 50%)';
+            }
+          });
+          var textNodes = newBtn.childNodes;
+          for (var i = 0; i < textNodes.length; i++) {
+            if (textNodes[i].nodeType === 3 && textNodes[i].textContent.includes('Staking')) {
+              textNodes[i].textContent = textNodes[i].textContent.replace('Staking', 'ASTHER Dex');
+            }
+          }
+          
+          var svgEl = newBtn.querySelector('svg');
+          if (svgEl) {
+            svgEl.innerHTML = '<path d="M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"/>';
+            svgEl.setAttribute('fill', 'none');
+            svgEl.setAttribute('stroke', 'currentColor');
+            svgEl.setAttribute('stroke-width', '2');
+            svgEl.setAttribute('stroke-linecap', 'round');
+            svgEl.setAttribute('stroke-linejoin', 'round');
+          }
+
+          refBtn.parentNode.insertBefore(newBtn, refBtn.nextSibling);
+
+          newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            sidebar.querySelectorAll('button').forEach(function(b) {
+              if (b.id !== 'asther-dex-btn') {
+                b.removeAttribute('data-active');
+              }
+            });
+            
+            var mainArea = document.querySelector('main');
+            if (!mainArea) {
+              mainArea = document.querySelector('div[class*="flex-1"][class*="overflow"]');
+            }
+            if (!mainArea) return;
+            
+            var dexFrame = document.getElementById('asther-dex-frame');
+            if (!dexFrame) {
+              dexFrame = document.createElement('div');
+              dexFrame.id = 'asther-dex-frame';
+              dexFrame.style.cssText = 'width:100%;height:100%;min-height:100vh;position:absolute;top:0;left:0;right:0;bottom:0;z-index:50;background:hsl(222,47%,5%);';
+              dexFrame.innerHTML = '<iframe src="/dex-embed.html" style="width:100%;height:100%;min-height:100vh;border:none;" title="ASTHER Dex"></iframe>';
+              mainArea.style.position = 'relative';
+              mainArea.appendChild(dexFrame);
+            }
+            dexFrame.style.display = 'block';
+          });
+          
+          sidebar.querySelectorAll('button:not(#asther-dex-btn)').forEach(function(b) {
+            b.addEventListener('click', function() {
+              var dexFrame = document.getElementById('asther-dex-frame');
+              if (dexFrame) dexFrame.style.display = 'none';
+            });
+          });
+        }
+
+        // Hide tokenomics section and nav link, inject Free API section
+        function handleHomepageMods() {
+          if (window.location.pathname !== '/') return;
+          
+          // Hide tokenomics section
+          const tokenomicsSection = document.getElementById('tokenomics');
+          if (tokenomicsSection && !tokenomicsSection.dataset.hidden) {
+            tokenomicsSection.dataset.hidden = 'true';
+            tokenomicsSection.style.display = 'none';
+          }
+          
+          // Remove tokenomics nav link
+          document.querySelectorAll('a, button, [role="button"]').forEach(el => {
+            var txt = el.textContent.trim();
+            if (el.getAttribute('href') === '#tokenomics' || 
+                (txt === 'Tokenomics' && (el.closest('nav') || el.closest('header')))) {
+              el.style.display = 'none';
+            }
+          });
+
+          // Replace "Token Generator" card with "FREE API KEY" in Our Tools
+          document.querySelectorAll('h3, h4, p, span, div').forEach(function(el) {
+            var t = el.textContent.trim();
+            if (t === 'Token Generator' && el.closest && !el.closest('#fapi-widget') && !el.closest('#tm-widget')) {
+              el.textContent = 'FREE API KEY';
+              var card = el.closest('div[class]');
+              if (card) {
+                var desc = card.querySelector('p') || card.querySelectorAll('div')[card.querySelectorAll('div').length - 1];
+                if (desc && desc.textContent.match(/Create and deploy|customizable parameters/i)) {
+                  desc.textContent = 'Get free AI API access by holding ASTHER tokens with daily credit limits.';
+                }
+                // Make the card clickable - scroll to Free API section
+                var clickTarget = card;
+                while (clickTarget.parentElement && !clickTarget.parentElement.querySelector(':scope > div + div')) { clickTarget = clickTarget.parentElement; }
+                clickTarget.style.cursor = 'pointer';
+                clickTarget.addEventListener('click', function(e) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  var fapi = document.getElementById('free-api-home-section');
+                  if (fapi) { fapi.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+                });
+              }
+            }
+          });
+
+          // Inject Asthera Free API section above "Our Tools" section
+          var toolsSection = null;
+          document.querySelectorAll('h2, h3, [class*="section"]').forEach(function(el) {
+            if (!toolsSection && el.textContent.trim().match(/^Our\s+Tools$/i)) {
+              toolsSection = el.closest('section') || el.closest('div[class]') || el.parentElement;
+            }
+          });
+          var insertTarget = toolsSection || document.getElementById('roadmap');
+          if (insertTarget && !document.getElementById('free-api-home-section')) {
+            const section = document.createElement('div');
+            section.id = 'free-api-home-section';
+            section.style.cssText = 'position:relative;z-index:10;width:100%;max-width:780px;margin:64px auto 48px;padding:0 20px;opacity:0;transform:translateY(40px);transition:opacity 0.6s ease,transform 0.6s ease;';
+            section.innerHTML = `
+<style>
+#fapi-widget,#fapi-widget *,#fapi-widget *::before,#fapi-widget *::after{box-sizing:border-box!important;line-height:normal!important;letter-spacing:normal!important;text-transform:none!important;text-decoration:none!important;list-style:none!important}
+#fapi-widget{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;color:#e2e8f0!important;-webkit-font-smoothing:antialiased!important}
+#fapi-widget div,#fapi-widget span,#fapi-widget p,#fapi-widget h3,#fapi-widget code,#fapi-widget button,#fapi-widget svg{margin:0!important;padding:0!important;border:none!important;outline:none!important;background:transparent!important;font-family:inherit!important;font-size:inherit!important;color:inherit!important}
+#fapi-widget .fapi-heading{font-family:'Space Grotesk','Inter',sans-serif!important;font-weight:700!important;font-size:32px!important;color:#fff!important;text-align:center!important;margin-bottom:28px!important;padding:0!important}
+#fapi-widget .fapi-outer{background:#111827!important;border-radius:24px!important;overflow:hidden!important;box-shadow:0 4px 40px rgba(0,0,0,0.4)!important;border:1px solid rgba(34,211,238,0.15)!important}
+#fapi-widget .fapi-topbar{background:linear-gradient(135deg,#0e7490,#0891b2,#06b6d4)!important;padding:20px 28px!important;display:flex!important;justify-content:space-between!important;align-items:center!important;gap:12px!important}
+#fapi-widget .fapi-topbar-left{display:flex!important;align-items:center!important;gap:14px!important}
+#fapi-widget .fapi-topbar-icon{width:48px!important;height:48px!important;background:rgba(255,255,255,0.15)!important;border-radius:14px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:24px!important;flex-shrink:0!important}
+#fapi-widget .fapi-topbar-label{font-size:13px!important;color:rgba(255,255,255,0.8)!important;font-weight:500!important;margin-bottom:2px!important}
+#fapi-widget .fapi-topbar-addr{font-size:16px!important;font-weight:700!important;font-family:'Space Grotesk',monospace!important;color:#fff!important}
+#fapi-widget .fapi-btn-disc{padding:10px 24px!important;border-radius:12px!important;border:1px solid rgba(255,255,255,0.3)!important;background:rgba(255,255,255,0.1)!important;color:#fff!important;font-size:13px!important;font-weight:600!important;cursor:pointer!important;font-family:'Inter',sans-serif!important;backdrop-filter:blur(8px)!important;transition:background 0.2s!important;flex-shrink:0!important}
+#fapi-widget .fapi-btn-disc:hover{background:rgba(255,255,255,0.2)!important}
+#fapi-widget .fapi-inner{padding:32px 36px 36px!important;position:relative!important;min-height:420px!important;background:#111827!important}
+@media(max-width:560px){#fapi-widget .fapi-inner{padding:24px 18px 28px!important}}
+#fapi-widget .fapi-overlay{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important;background:rgba(17,24,39,0.96)!important;backdrop-filter:blur(8px)!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;z-index:20!important;padding:40px 24px!important}
+#fapi-widget .fapi-lock{width:84px!important;height:84px!important;background:linear-gradient(135deg,#0e7490,#06b6d4)!important;border-radius:22px!important;display:flex!important;align-items:center!important;justify-content:center!important;margin-bottom:28px!important;box-shadow:0 8px 28px rgba(6,182,212,0.3)!important}
+#fapi-widget .fapi-lock svg{width:42px!important;height:42px!important}
+#fapi-widget .fapi-con-title{font-size:24px!important;font-weight:700!important;color:#f1f5f9!important;margin-bottom:12px!important;text-align:center!important}
+#fapi-widget .fapi-con-desc{font-size:15px!important;color:#94a3b8!important;text-align:center!important;line-height:1.6!important;margin-bottom:6px!important}
+#fapi-widget .fapi-con-hl{font-size:15px!important;color:#22d3ee!important;font-weight:600!important;text-align:center!important;margin-bottom:28px!important}
+#fapi-widget .fapi-wallet-opts{display:flex!important;gap:14px!important;flex-wrap:wrap!important;justify-content:center!important;margin-bottom:4px!important}
+#fapi-widget .fapi-btn-con{padding:15px 32px!important;border-radius:14px!important;border:none!important;background:linear-gradient(135deg,#0e7490,#06b6d4)!important;color:#fff!important;font-size:15px!important;font-weight:700!important;cursor:pointer!important;font-family:'Inter',sans-serif!important;transition:opacity 0.2s,transform 0.15s!important;box-shadow:0 6px 24px rgba(6,182,212,0.35)!important;display:inline-flex!important;align-items:center!important;gap:10px!important}
+#fapi-widget .fapi-btn-con:hover{opacity:0.9!important;transform:scale(1.03)!important}
+#fapi-widget .fapi-btn-sol{background:linear-gradient(135deg,#7c3aed,#9333ea)!important;box-shadow:0 6px 24px rgba(147,51,234,0.35)!important}
+#fapi-widget .fapi-con-sec{font-size:12px!important;color:#64748b!important;margin-top:16px!important;display:flex!important;align-items:center!important;gap:6px!important}
+#fapi-widget .fapi-api-hdr{display:flex!important;justify-content:space-between!important;align-items:center!important;margin-bottom:20px!important;flex-wrap:wrap!important;gap:12px!important}
+#fapi-widget .fapi-api-title{font-size:18px!important;font-weight:700!important;display:flex!important;align-items:center!important;gap:8px!important;color:#f1f5f9!important}
+#fapi-widget .fapi-api-actions{display:flex!important;gap:8px!important;flex-wrap:wrap!important}
+#fapi-widget .fapi-btn-act{padding:8px 16px!important;border-radius:10px!important;border:1px solid #374151!important;background:#1e293b!important;color:#94a3b8!important;font-size:13px!important;font-weight:600!important;cursor:pointer!important;font-family:'Inter',sans-serif!important;display:inline-flex!important;align-items:center!important;gap:6px!important;transition:all 0.2s!important;white-space:nowrap!important}
+#fapi-widget .fapi-btn-act:hover{border-color:#22d3ee!important;color:#22d3ee!important;background:#1e3a4a!important}
+#fapi-widget .fapi-btn-act.green{color:#34d399!important;border-color:#065f46!important}
+#fapi-widget .fapi-btn-act.green:hover{background:#064e3b!important}
+#fapi-widget .fapi-btn-act.red{color:#f87171!important;border-color:#7f1d1d!important}
+#fapi-widget .fapi-btn-act.red:hover{background:#450a0a!important}
+#fapi-widget .fapi-keybox{display:flex!important;align-items:center!important;background:#0f172a!important;border:1px solid #1e293b!important;border-radius:14px!important;padding:14px 16px!important;margin-bottom:12px!important;gap:10px!important}
+#fapi-widget .fapi-keytext{flex:1!important;font-family:'Space Grotesk',monospace!important;font-size:15px!important;color:#e2e8f0!important;letter-spacing:0.5px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+#fapi-widget .fapi-btn-icn{width:36px!important;height:36px!important;border-radius:8px!important;border:none!important;background:transparent!important;color:#64748b!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:color 0.2s!important;flex-shrink:0!important}
+#fapi-widget .fapi-btn-icn:hover{color:#e2e8f0!important}
+#fapi-widget .fapi-btn-cpy{padding:10px 24px!important;border-radius:10px!important;border:none!important;background:#0891b2!important;color:#fff!important;font-size:14px!important;font-weight:700!important;cursor:pointer!important;font-family:'Inter',sans-serif!important;transition:opacity 0.2s!important;flex-shrink:0!important}
+#fapi-widget .fapi-btn-cpy:hover{opacity:0.85!important}
+#fapi-widget .fapi-baseurl{font-size:13px!important;color:#64748b!important;display:flex!important;align-items:center!important;gap:6px!important;margin-bottom:28px!important}
+#fapi-widget .fapi-baseurl code{color:#22d3ee!important;font-family:'Space Grotesk',monospace!important;font-size:13px!important}
+#fapi-widget .fapi-stats{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:14px!important;margin-bottom:28px!important}
+@media(max-width:560px){#fapi-widget .fapi-stats{grid-template-columns:repeat(2,1fr)!important}}
+#fapi-widget .fapi-stat{border-radius:16px!important;padding:22px 14px!important;text-align:center!important;border:1px solid rgba(255,255,255,0.06)!important}
+#fapi-widget .fapi-stat.cy{background:rgba(202,138,4,0.1)!important;border-color:rgba(202,138,4,0.2)!important}
+#fapi-widget .fapi-stat.cg{background:rgba(34,197,94,0.1)!important;border-color:rgba(34,197,94,0.2)!important}
+#fapi-widget .fapi-stat.cr{background:rgba(239,68,68,0.1)!important;border-color:rgba(239,68,68,0.2)!important}
+#fapi-widget .fapi-stat.cp{background:rgba(6,182,212,0.1)!important;border-color:rgba(6,182,212,0.2)!important}
+#fapi-widget .fapi-stat-label{font-size:12px!important;color:#94a3b8!important;font-weight:600!important;margin-bottom:8px!important}
+#fapi-widget .fapi-stat-val{font-size:26px!important;font-weight:800!important;font-family:'Space Grotesk',monospace!important}
+#fapi-widget .fapi-stat-val.vg{color:#34d399!important}
+#fapi-widget .fapi-stat-val.vr{color:#f87171!important}
+#fapi-widget .fapi-stat-val.vy{color:#fbbf24!important}
+#fapi-widget .fapi-stat-val.vp{color:#22d3ee!important}
+#fapi-widget .fapi-tokenbar{display:flex!important;align-items:center!important;gap:16px!important;background:#0f172a!important;border-radius:16px!important;padding:18px 22px!important;border:1px solid #1e293b!important}
+#fapi-widget .fapi-tbi{width:48px!important;height:48px!important;border-radius:14px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:24px!important;flex-shrink:0!important}
+#fapi-widget .fapi-tbinfo{flex:1!important}
+#fapi-widget .fapi-tbt{font-size:15px!important;font-weight:700!important;color:#f1f5f9!important}
+#fapi-widget .fapi-tbs{font-size:13px!important;color:#64748b!important;margin-top:3px!important}
+#fapi-widget .fapi-prog{flex-shrink:0!important;width:100px!important;height:8px!important;background:#1e293b!important;border-radius:4px!important;overflow:hidden!important}
+#fapi-widget .fapi-progfill{height:100%!important;border-radius:4px!important;background:linear-gradient(90deg,#06b6d4,#22d3ee)!important;transition:width 0.5s ease!important}
+#fapi-widget .fapi-pct{font-size:15px!important;font-weight:700!important;color:#e2e8f0!important;min-width:40px!important;text-align:right!important}
+#fapi-widget .fapi-hidden{display:none!important}
+.fapi-toast{position:fixed!important;bottom:24px!important;left:50%!important;transform:translateX(-50%)!important;background:#0f172a!important;color:#fff!important;padding:12px 28px!important;border-radius:12px!important;font-size:13px!important;font-weight:600!important;z-index:9999!important;animation:fapiFadeUp 0.3s ease!important;box-shadow:0 4px 20px rgba(0,0,0,0.4)!important;border:1px solid rgba(34,211,238,0.2)!important}
+@keyframes fapiFadeUp{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+<div id="fapi-widget">
+  <h3 class="fapi-heading">Asthera Free API</h3>
+  <div class="fapi-outer">
+    <div class="fapi-topbar">
+      <div class="fapi-topbar-left">
+        <div class="fapi-topbar-icon">&#x1F511;</div>
+        <div>
+          <div class="fapi-topbar-label" id="fapi-top-label">Connect Wallet for API Key</div>
+          <div class="fapi-topbar-addr" id="fapi-top-addr">0x...</div>
+        </div>
+      </div>
+      <button class="fapi-btn-disc fapi-hidden" id="fapi-btn-disc" onclick="fapiDisconnect()">Disconnect</button>
+    </div>
+    <div class="fapi-inner">
+      <div class="fapi-api-hdr">
+        <div class="fapi-api-title"><span>&#x1F511;</span> Your API Key</div>
+        <div class="fapi-api-actions">
+          <button class="fapi-btn-act" onclick="fapiRefresh()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg> Refresh</button>
+          <button class="fapi-btn-act green" onclick="fapiViewLogs()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> View Logs</button>
+          <button class="fapi-btn-act red" onclick="fapiRegenerate()">Regenerate</button>
+        </div>
+      </div>
+      <div class="fapi-keybox">
+        <div class="fapi-keytext" id="fapi-key-display">sk-xxxx............xxxx</div>
+        <button class="fapi-btn-icn" onclick="fapiToggleKey()" title="Show/Hide"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <button class="fapi-btn-cpy" onclick="fapiCopy()">Copy</button>
+      </div>
+      <div class="fapi-baseurl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Base URL: <code>https://astherafi.com/api/v1</code></div>
+      <div class="fapi-stats">
+        <div class="fapi-stat cy"><div class="fapi-stat-label">Daily Limit</div><div class="fapi-stat-val vg" id="fapi-s-limit">$0.00</div></div>
+        <div class="fapi-stat cg"><div class="fapi-stat-label">Remaining</div><div class="fapi-stat-val vg" id="fapi-s-remain">$0.00</div></div>
+        <div class="fapi-stat cr"><div class="fapi-stat-label">Used Today</div><div class="fapi-stat-val vr" id="fapi-s-used">$0.00</div></div>
+        <div class="fapi-stat cp"><div class="fapi-stat-label">Tokens Held</div><div class="fapi-stat-val vy" id="fapi-s-tokens">0.00</div></div>
+      </div>
+      <div class="fapi-tokenbar">
+        <div class="fapi-tbi" id="fapi-ticon" style="background:rgba(6,182,212,0.15);">&#x23F3;</div>
+        <div class="fapi-tbinfo">
+          <div class="fapi-tbt" id="fapi-ttitle">Hold tokens to get started</div>
+          <div class="fapi-tbs" id="fapi-tsub">Buy ASTHER to unlock API access</div>
+        </div>
+        <div class="fapi-prog"><div class="fapi-progfill" id="fapi-prog" style="width:0%"></div></div>
+        <div class="fapi-pct" id="fapi-pct">0%</div>
+      </div>
+      <!-- Connect overlay -->
+      <div class="fapi-overlay" id="fapi-overlay">
+        <div class="fapi-lock"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="11" width="18" height="11" rx="2" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="#92400e"/></svg></div>
+        <div class="fapi-con-title">Free API Key</div>
+        <div class="fapi-con-desc">Hold $ASTHER tokens to receive daily free credits.</div>
+        <div class="fapi-con-hl">$10 Holding Value = $1 Daily Credit</div>
+        <div style="padding:14px 28px!important;border-radius:14px!important;background:linear-gradient(135deg,#1e293b,#334155)!important;color:#94a3b8!important;font-size:16px!important;font-weight:700!important;font-family:'Inter',sans-serif!important;display:inline-flex!important;align-items:center!important;gap:10px!important;border:1px solid #475569!important;cursor:default!important" data-testid="badge-coming-soon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Coming Soon</div>
+        <div class="fapi-con-sec" style="margin-top:16px!important"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" fill="#f59e0b"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#f59e0b" stroke-width="2"/></svg> Wallet connect will be enabled after token launch</div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+            insertTarget.parentNode.insertBefore(section, insertTarget);
+            requestAnimationFrame(() => { requestAnimationFrame(() => { section.style.opacity='1'; section.style.transform='translateY(0)'; }); });
+          }
+
+          // Inject Top Models section after Free API widget
+          var fapiSection = document.getElementById('free-api-home-section');
+          if (fapiSection && !document.getElementById('top-models-section')) {
+            var modelsEl = document.createElement('div');
+            modelsEl.id = 'top-models-section';
+            modelsEl.style.cssText = 'position:relative;z-index:10;width:100%;max-width:900px;margin:0 auto 56px;padding:0 20px;opacity:0;transform:translateY(40px);transition:opacity 0.6s ease 0.15s,transform 0.6s ease 0.15s;';
+            modelsEl.innerHTML = `
+<style>
+#tm-widget,#tm-widget *{box-sizing:border-box!important;margin:0!important;padding:0!important;border:none!important;outline:none!important}
+#tm-widget{font-family:'Inter',-apple-system,sans-serif!important;text-align:center!important}
+#tm-widget .tm-badge{display:inline-block!important;padding:6px 20px!important;border-radius:20px!important;border:1px solid rgba(34,211,238,0.3)!important;background:rgba(6,182,212,0.1)!important;color:#22d3ee!important;font-size:13px!important;font-weight:600!important;margin-bottom:16px!important}
+#tm-widget .tm-title{font-family:'Space Grotesk','Inter',sans-serif!important;font-size:28px!important;font-weight:700!important;color:#fff!important;margin-bottom:32px!important}
+#tm-widget .tm-grid{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:14px!important;margin-bottom:28px!important}
+@media(max-width:700px){#tm-widget .tm-grid{grid-template-columns:repeat(2,1fr)!important}}
+@media(max-width:400px){#tm-widget .tm-grid{grid-template-columns:1fr!important}}
+#tm-widget .tm-card{background:#111827!important;border:1px solid rgba(255,255,255,0.08)!important;border-radius:16px!important;padding:20px 16px!important;text-align:left!important;transition:border-color 0.2s!important;cursor:default!important}
+#tm-widget .tm-card:hover{border-color:rgba(34,211,238,0.25)!important}
+#tm-widget .tm-card-provider{display:flex!important;align-items:center!important;gap:8px!important;margin-bottom:10px!important;font-size:12px!important;color:#94a3b8!important;font-weight:500!important}
+#tm-widget .tm-card-icon{width:24px!important;height:24px!important;border-radius:6px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:12px!important;font-weight:700!important;color:#fff!important;flex-shrink:0!important}
+#tm-widget .tm-card-name{font-size:16px!important;font-weight:700!important;color:#f1f5f9!important;margin-bottom:6px!important}
+#tm-widget .tm-card-tag{font-size:11px!important;font-weight:600!important;display:inline-flex!important;align-items:center!important;gap:4px!important}
+#tm-widget .tm-viewall{display:inline-flex!important;align-items:center!important;gap:8px!important;padding:14px 36px!important;border-radius:14px!important;border:none!important;background:linear-gradient(135deg,#0e7490,#06b6d4)!important;color:#fff!important;font-size:15px!important;font-weight:700!important;cursor:pointer!important;font-family:'Inter',sans-serif!important;transition:opacity 0.2s,transform 0.15s!important;box-shadow:0 6px 24px rgba(6,182,212,0.3)!important;text-decoration:none!important}
+#tm-widget .tm-viewall:hover{opacity:0.9!important;transform:scale(1.03)!important}
+</style>
+<div id="tm-widget">
+  <div class="tm-badge">Top Models</div>
+  <div class="tm-title">Access 200+ AI Models</div>
+  <div class="tm-grid">
+    <div class="tm-card">
+      <div class="tm-card-provider"><div class="tm-card-icon" style="background:#10a37f!important;">G</div> OpenAI</div>
+      <div class="tm-card-name">GPT-5.2</div>
+      <div class="tm-card-tag" style="color:#f59e0b!important;">&#x1F525; Flagship</div>
+    </div>
+    <div class="tm-card">
+      <div class="tm-card-provider"><div class="tm-card-icon" style="background:#10a37f!important;">G</div> OpenAI</div>
+      <div class="tm-card-name">o3 Pro</div>
+      <div class="tm-card-tag" style="color:#ef4444!important;">&#x1F525; Reasoning</div>
+    </div>
+    <div class="tm-card">
+      <div class="tm-card-provider"><div class="tm-card-icon" style="background:#d97706!important;">A</div> Anthropic</div>
+      <div class="tm-card-name">Claude 4.5 Opus</div>
+      <div class="tm-card-tag" style="color:#f59e0b!important;">&#x2B50; Best Value</div>
+    </div>
+    <div class="tm-card">
+      <div class="tm-card-provider"><div class="tm-card-icon" style="background:#4285f4!important;">G</div> Google</div>
+      <div class="tm-card-name">Gemini 3 Pro</div>
+      <div class="tm-card-tag" style="color:#ef4444!important;">&#x1F525; Next Gen</div>
+    </div>
+    <div class="tm-card">
+      <div class="tm-card-provider"><div class="tm-card-icon" style="background:#7c3aed!important;">D</div> DeepSeek</div>
+      <div class="tm-card-name">DeepSeek R1</div>
+      <div class="tm-card-tag" style="color:#ef4444!important;">&#x1F525; Top Logic</div>
+    </div>
+    <div class="tm-card">
+      <div class="tm-card-provider"><div class="tm-card-icon" style="background:#1a1a2e!important;">x</div> xAI</div>
+      <div class="tm-card-name">Grok 4</div>
+      <div class="tm-card-tag" style="color:#ef4444!important;">&#x1F525; Uncensored</div>
+    </div>
+    <div class="tm-card">
+      <div class="tm-card-provider"><div class="tm-card-icon" style="background:#22c55e!important;">K</div> Moonshot</div>
+      <div class="tm-card-name">Kimi K2</div>
+      <div class="tm-card-tag" style="color:#ef4444!important;">&#x1F525; MoE Arch</div>
+    </div>
+    <div class="tm-card">
+      <div class="tm-card-provider"><div class="tm-card-icon" style="background:#7c3aed!important;">Q</div> Alibaba</div>
+      <div class="tm-card-name">Qwen3 Max</div>
+      <div class="tm-card-tag" style="color:#ef4444!important;">&#x1F525; Top Open</div>
+    </div>
+  </div>
+  <a href="/models" class="tm-viewall">View All 200+ Models <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg></a>
+</div>
+`;
+            fapiSection.parentNode.insertBefore(modelsEl, fapiSection.nextSibling);
+            requestAnimationFrame(() => { requestAnimationFrame(() => { modelsEl.style.opacity='1'; modelsEl.style.transform='translateY(0)'; }); });
+          }
+
+          // Update Roadmap items to reflect completed features
+          updateRoadmap();
+        }
+
+        function updateRoadmap() {
+          var roadmapSection = document.getElementById('roadmap');
+          if (!roadmapSection || roadmapSection.dataset.roadmapUpdated) return;
+
+          var lang = localStorage.getItem('astherafi-lang') || 'en';
+
+          var phase3Updates = {
+            en: [
+              { old: 'Staking Platform Launch', new: 'Staking Platform Launch', done: true },
+              { old: 'Mobile App Development', new: 'ASTHER DEX Launch', done: true },
+              { old: 'Advanced Analytics', new: 'Asthera AI Assistant', done: true },
+              { old: 'CEX Listings', new: 'Asthera Free API', done: true }
+            ],
+            zh: [
+              { old: '\u8D28\u62BC\u5E73\u53F0\u542F\u52A8', new: 'Staking \u5E73\u53F0\u4E0A\u7EBF', done: true },
+              { old: '\u79FB\u52A8\u5E94\u7528\u5F00\u53D1', new: 'ASTHER DEX \u4E0A\u7EBF', done: true },
+              { old: '\u9AD8\u7EA7\u5206\u6790', new: 'Asthera AI \u52A9\u624B', done: true },
+              { old: 'CEX\u4E0A\u5E02', new: 'Asthera \u514D\u8D39 API', done: true }
+            ],
+            ar: [
+              { old: '\u0625\u0637\u0644\u0627\u0642 \u0645\u0646\u0635\u0629 \u0627\u0644\u062A\u062E\u0632\u064A\u0646', new: '\u0625\u0637\u0644\u0627\u0642 \u0645\u0646\u0635\u0629 Staking', done: true },
+              { old: '\u062A\u0637\u0648\u064A\u0631 \u062A\u0637\u0628\u064A\u0642 \u0627\u0644\u062C\u0648\u0627\u0644', new: '\u0625\u0637\u0644\u0627\u0642 ASTHER DEX', done: true },
+              { old: '\u062A\u062D\u0644\u064A\u0644\u0627\u062A \u0645\u062A\u0642\u062F\u0645\u0629', new: '\u0645\u0633\u0627\u0639\u062F Asthera AI', done: true },
+              { old: '\u0625\u062F\u0631\u0627\u062C CEX', new: 'Asthera API \u0645\u062C\u0627\u0646\u064A', done: true }
+            ]
+          };
+
+          var updates = phase3Updates[lang] || phase3Updates['en'];
+
+          var checkSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.5" style="vertical-align:middle;margin-right:4px;"><path d="M20 6L9 17l-5-5"/></svg>';
+
+          var allLis = roadmapSection.querySelectorAll('li');
+          allLis.forEach(function(li) {
+            var txt = li.textContent.trim();
+            updates.forEach(function(u) {
+              if (txt === u.old || txt === u.new) {
+                if (u.done) {
+                  li.innerHTML = checkSvg + '<span style="color:#22d3ee;font-weight:600">' + u.new + '</span>';
+                } else {
+                  li.textContent = u.new;
+                }
+              }
+            });
+
+            // Replace "Deploy Token Generator" with "Password Security Tool"
+            if (txt === 'Deploy Token Generator' || txt === '\u90E8\u7F72\u4EE3\u5E01\u751F\u6210\u5668' || txt === '\u0646\u0634\u0631 \u0645\u0648\u0644\u062F \u0627\u0644\u0631\u0645\u0648\u0632') {
+              var newText = lang === 'zh' ? '\u5BC6\u7801\u5B89\u5168\u5DE5\u5177' : (lang === 'ar' ? '\u0623\u062F\u0627\u0629 \u0623\u0645\u0627\u0646 \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631' : 'Password Security Tool');
+              li.innerHTML = checkSvg + '<span style="color:#22d3ee;font-weight:600">' + newText + '</span>';
+            }
+            // Replace "Token Generator on BSC" in docs roadmap
+            if (txt === 'Token Generator on BSC' || txt === 'BSC\u4EE3\u5E01\u751F\u6210\u5668' || txt === '\u0645\u0648\u0644\u062F \u0627\u0644\u0631\u0645\u0648\u0632 \u0639\u0644\u0649 BSC') {
+              var newText2 = lang === 'zh' ? 'Asthera \u514D\u8D39 API' : (lang === 'ar' ? 'Asthera API \u0645\u062C\u0627\u0646\u064A' : 'Asthera Free API');
+              li.innerHTML = checkSvg + '<span style="color:#22d3ee;font-weight:600">' + newText2 + '</span>';
+            }
+          });
+
+          // Also update Phase 3 subtitle from "Growth" to "Achievements"
+          roadmapSection.querySelectorAll('h4, span').forEach(function(el) {
+            var t = el.textContent.trim();
+            if (t === 'Growth' || t === '\u589E\u957F' || t === '\u0627\u0644\u0646\u0645\u0648') {
+              if (lang === 'zh') el.textContent = '\u6210\u5C31';
+              else if (lang === 'ar') el.textContent = '\u0627\u0644\u0625\u0646\u062C\u0627\u0632\u0627\u062A';
+              else el.textContent = 'Achievements';
+            }
+          });
+
+          roadmapSection.dataset.roadmapUpdated = 'true';
+        }
+
+        function handleDocsMods() {
+          if (window.location.pathname !== '/docs') return;
+
+          var lang = localStorage.getItem('astherafi-lang') || 'en';
+
+          // Hide Tokenomics section in docs
+          document.querySelectorAll('h2, h3, h4').forEach(function(el) {
+            var txt = el.textContent.trim();
+            if (txt === 'Tokenomics' || txt === '\u4EE3\u5E01\u7ECF\u6D4E\u5B66' || txt === '\u0627\u0642\u062A\u0635\u0627\u062F\u064A\u0627\u062A \u0627\u0644\u0631\u0645\u0648\u0632') {
+              var section = el.closest('section') || el.closest('div[class*="border"]') || el.closest('div[class*="rounded"]');
+              if (section && !section.dataset.docsHidden) {
+                section.dataset.docsHidden = 'true';
+                section.style.display = 'none';
+              }
+              // Also try parent container
+              if (!section) {
+                var parent = el.parentElement;
+                while (parent && parent.tagName !== 'MAIN' && parent.tagName !== 'BODY') {
+                  if (parent.querySelector('table') || parent.textContent.includes('Total Supply') || parent.textContent.includes('Locked')) {
+                    parent.style.display = 'none';
+                    parent.dataset.docsHidden = 'true';
+                    break;
+                  }
+                  parent = parent.parentElement;
+                }
+              }
+            }
+          });
+
+          // Replace all BSC references, Token Generator, and Token Swap throughout docs
+          document.querySelectorAll('h2, h3, h4, p, span, div, li, td').forEach(function(el) {
+            if (el.dataset.docsUpdated) return;
+            if (el.children.length > 0 && el.tagName !== 'LI' && el.tagName !== 'TD' && el.tagName !== 'SPAN') return;
+
+            var txt = el.textContent.trim();
+
+            // Remove BSC badge text
+            if (txt === 'BSC') {
+              el.textContent = 'Solana';
+              el.dataset.docsUpdated = 'true';
+            }
+
+            // Replace "BNB Smart Chain" / BSC references
+            if (txt.includes('BNB Smart Chain') || txt.includes('BSC')) {
+              el.textContent = el.textContent.replace(/BNB Smart Chain/g, 'Solana').replace(/BSC/g, 'Solana');
+              el.dataset.docsUpdated = 'true';
+            }
+
+            // Replace Token Generator title
+            if (txt === 'Token Generator' || txt === '\u4EE3\u5E01\u751F\u6210\u5668' || txt === '\u0645\u0648\u0644\u062F \u0627\u0644\u0631\u0645\u0648\u0632') {
+              var isInDocs = el.closest('main') || el.closest('[class*="docs"]') || el.closest('[class*="content"]');
+              if (isInDocs) {
+                el.textContent = lang === 'zh' ? 'Asthera \u514D\u8D39 API' : (lang === 'ar' ? 'Asthera API \u0645\u062C\u0627\u0646\u064A' : 'Asthera Free API');
+                el.dataset.docsUpdated = 'true';
+                // Update description in the parent card
+                var card = el.closest('div[class*="border"]') || el.closest('div[class*="rounded"]') || el.parentElement;
+                if (card) {
+                  card.querySelectorAll('p, span').forEach(function(desc) {
+                    if (desc.textContent.match(/Create your own token|BNB|customizable parameters|\u5728BNB|\u53EF\u81EA\u5B9A\u4E49|\u0623\u0646\u0634\u0626/)) {
+                      desc.textContent = lang === 'zh' ? '\u6301\u6709 ASTHER \u4EE3\u5E01\u53EF\u514D\u8D39\u83B7\u53D6 AI API \u8BBF\u95EE\uFF0C\u6BCF\u65E5\u6709\u989D\u5EA6\u9650\u5236\u3002' : (lang === 'ar' ? '\u0627\u062D\u0635\u0644 \u0639\u0644\u0649 \u0648\u0635\u0648\u0644 \u0645\u062C\u0627\u0646\u064A \u0644\u0640 AI API \u0628\u0627\u0645\u062A\u0644\u0627\u0643 \u0631\u0645\u0648\u0632 ASTHER' : 'Get free AI API access by holding ASTHER tokens with daily credit limits.');
+                      desc.dataset.docsUpdated = 'true';
+                    }
+                  });
+                  // Update sub-items
+                  card.querySelectorAll('li').forEach(function(li, i) {
+                    var apiFeatures = lang === 'zh'
+                      ? ['\u6301\u6709 $10 ASTHER = \u6BCF\u65E5 $1 API \u989D\u5EA6', '\u8BBF\u95EE 200+ AI \u6A21\u578B', '\u5B9E\u65F6\u4F7F\u7528\u91CF\u8DDF\u8E2A', '\u5B89\u5168 API \u5BC6\u94A5\u7BA1\u7406', '\u652F\u6301 BSC \u548C Solana \u94B1\u5305']
+                      : lang === 'ar'
+                      ? ['\u0627\u0645\u062A\u0644\u0627\u0643 $10 ASTHER = $1 \u0631\u0635\u064A\u062F \u064A\u0648\u0645\u064A', '\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 200+ \u0646\u0645\u0648\u0630\u062C AI', '\u062A\u062A\u0628\u0639 \u0627\u0644\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0641\u064A \u0627\u0644\u0648\u0642\u062A \u0627\u0644\u0641\u0639\u0644\u064A', '\u0625\u062F\u0627\u0631\u0629 \u0645\u0641\u0627\u062A\u064A\u062D API \u0622\u0645\u0646\u0629', '\u062F\u0639\u0645 \u0645\u062D\u0627\u0641\u0638 Solana']
+                      : ['Hold $10 ASTHER = $1 daily API credit', 'Access 200+ AI models', 'Real-time usage tracking', 'Secure API key management', 'Solana wallet support'];
+                    if (i < apiFeatures.length) {
+                      li.textContent = apiFeatures[i];
+                      li.dataset.docsUpdated = 'true';
+                    }
+                  });
+                }
+              }
+            }
+
+            // Replace Token Swap → ASTHER DEX
+            if (txt === 'Token Swap' || txt === '\u4EE3\u5E01\u5151\u6362' || txt === '\u062A\u0628\u0627\u062F\u0644 \u0627\u0644\u0631\u0645\u0648\u0632') {
+              var isInDocs2 = el.closest('main') || el.closest('[class*="docs"]') || el.closest('[class*="content"]');
+              if (isInDocs2) {
+                el.textContent = 'ASTHER DEX';
+                el.dataset.docsUpdated = 'true';
+                var card2 = el.closest('div[class*="border"]') || el.closest('div[class*="rounded"]') || el.parentElement;
+                if (card2) {
+                  card2.querySelectorAll('p, span').forEach(function(desc) {
+                    if (desc.textContent.match(/Swap tokens directly|\u5728\u5E73\u53F0|\u062A\u0628\u0627\u062F\u0644 \u0627\u0644\u0631\u0645\u0648\u0632 \u0645\u0628\u0627\u0634\u0631\u0629/)) {
+                      desc.textContent = lang === 'zh' ? '\u5728 Solana \u7F51\u7EDC\u4E0A\u4EA4\u6613\u4EFB\u4F55\u4EE3\u5E01\uFF0C\u7531 Jupiter \u63D0\u4F9B\u652F\u6301\u3002' : (lang === 'ar' ? '\u062A\u062F\u0627\u0648\u0644 \u0623\u064A \u0631\u0645\u0632 \u0639\u0644\u0649 \u0634\u0628\u0643\u0629 Solana \u0628\u062F\u0639\u0645 \u0645\u0646 Jupiter.' : 'Trade any Solana token with Jupiter-powered swaps and real-time trending data.');
+                      desc.dataset.docsUpdated = 'true';
+                    }
+                  });
+                  // Update badge from DEX to Solana
+                  card2.querySelectorAll('span').forEach(function(badge) {
+                    if (badge.textContent.trim() === 'DEX') {
+                      badge.textContent = 'Solana';
+                      badge.dataset.docsUpdated = 'true';
+                    }
+                  });
+                  // Update sub-items
+                  card2.querySelectorAll('li').forEach(function(li, i) {
+                    var dexFeatures = lang === 'zh'
+                      ? ['Solana \u7F51\u7EDC\u70ED\u95E8\u4EE3\u5E01', 'DexScreener \u5B9E\u65F6\u6570\u636E', 'Jupiter \u4EE3\u5E01\u4EA4\u6362', '\u65B0\u4EE3\u5E01\u4E0A\u5E02\u8DDF\u8E2A']
+                      : lang === 'ar'
+                      ? ['\u0631\u0645\u0648\u0632 Solana \u0627\u0644\u0631\u0627\u0626\u062C\u0629', '\u0628\u064A\u0627\u0646\u0627\u062A DexScreener \u0627\u0644\u0645\u0628\u0627\u0634\u0631\u0629', '\u062A\u0628\u0627\u062F\u0644 Jupiter', '\u062A\u062A\u0628\u0639 \u0627\u0644\u0625\u062F\u0631\u0627\u062C\u0627\u062A \u0627\u0644\u062C\u062F\u064A\u062F\u0629']
+                      : ['Solana trending tokens', 'DexScreener real-time data', 'Jupiter token swaps', 'New listings tracking'];
+                    if (i < dexFeatures.length) {
+                      li.textContent = dexFeatures[i];
+                      li.dataset.docsUpdated = 'true';
+                    }
+                  });
+                }
+              }
+            }
+
+            // Update docs roadmap Phase 3 items
+            var dCheckSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.5" style="vertical-align:middle;margin-right:4px;"><path d="M20 6L9 17l-5-5"/></svg>';
+            if (txt === 'Token Staking platform' || txt === '\u4EE3\u5E01\u8D28\u62BC\u5E73\u53F0' || txt === '\u0645\u0646\u0635\u0629 \u062A\u062E\u0632\u064A\u0646 \u0627\u0644\u0631\u0645\u0648\u0632') {
+              el.innerHTML = dCheckSvg + '<span style="color:#22d3ee;font-weight:600">' + (lang === 'zh' ? 'Staking \u5E73\u53F0' : lang === 'ar' ? '\u0645\u0646\u0635\u0629 Staking' : 'Staking Platform') + '</span>';
+              el.dataset.docsUpdated = 'true';
+            }
+            if (txt === 'DEX aggregator integration' || txt === 'DEX\u805A\u5408\u5668\u96C6\u6210' || txt === '\u062A\u0643\u0627\u0645\u0644 \u0645\u062C\u0645\u0639 DEX') {
+              el.innerHTML = dCheckSvg + '<span style="color:#22d3ee;font-weight:600">ASTHER DEX</span>';
+              el.dataset.docsUpdated = 'true';
+            }
+            if (txt === 'Portfolio tracking' || txt === '\u6295\u8D44\u7EC4\u5408\u8DDF\u8E2A' || txt === '\u062A\u062A\u0628\u0639 \u0627\u0644\u0645\u062D\u0641\u0638\u0629') {
+              el.innerHTML = dCheckSvg + '<span style="color:#22d3ee;font-weight:600">' + (lang === 'zh' ? 'Asthera AI \u52A9\u624B' : lang === 'ar' ? '\u0645\u0633\u0627\u0639\u062F Asthera AI' : 'Asthera AI Assistant') + '</span>';
+              el.dataset.docsUpdated = 'true';
+            }
+            if (txt === 'Alert notifications system' || txt === '\u8B66\u62A5\u901A\u77E5\u7CFB\u7EDF' || txt === '\u0646\u0638\u0627\u0645 \u0625\u0634\u0639\u0627\u0631\u0627\u062A \u0627\u0644\u062A\u0646\u0628\u064A\u0647') {
+              el.innerHTML = dCheckSvg + '<span style="color:#22d3ee;font-weight:600">' + (lang === 'zh' ? 'Asthera \u514D\u8D39 API' : lang === 'ar' ? 'Asthera API \u0645\u062C\u0627\u0646\u064A' : 'Asthera Free API') + '</span>';
+              el.dataset.docsUpdated = 'true';
+            }
+
+            // Update docs roadmap Phase 3 subtitle
+            if (txt === 'Growth' || txt === '\u589E\u957F' || txt === '\u0627\u0644\u0646\u0645\u0648') {
+              var inDocsRoadmap = el.closest('section') || el.closest('div');
+              if (inDocsRoadmap && inDocsRoadmap.textContent.includes('Phase 3')) {
+                el.textContent = lang === 'zh' ? '\u6210\u5C31' : (lang === 'ar' ? '\u0627\u0644\u0625\u0646\u062C\u0627\u0632\u0627\u062A' : 'Achievements');
+                el.dataset.docsUpdated = 'true';
+              }
+            }
+
+            // Replace ERC-20 references in docs
+            if (txt.includes('ERC-20')) {
+              el.textContent = el.textContent.replace(/ERC-20/g, 'SPL');
+              el.dataset.docsUpdated = 'true';
+            }
+          });
+        }
+        
+        handleHomepageMods();
+
+        // Multi-language translations for injected sections
+        function applyFapiTranslations() {
+          var lang = localStorage.getItem('astherafi-lang') || 'en';
+          if (lang === 'en') return;
+          var t = {
+            zh: {
+              'Asthera Free API': 'Asthera \u514D\u8D39 API',
+              'Free API Key': '\u514D\u8D39 API \u5BC6\u94A5',
+              'Connect Wallet for API Key': '\u8FDE\u63A5\u94B1\u5305\u83B7\u53D6 API \u5BC6\u94A5',
+              'Hold $ASTHER tokens to receive daily free credits.': '\u6301\u6709 $ASTHER \u4EE3\u5E01\u53EF\u6BCF\u65E5\u514D\u8D39\u83B7\u53D6\u989D\u5EA6\u3002',
+              '$10 Holding Value = $1 Daily Credit': '$10 \u6301\u6709\u4EF7\u503C = $1 \u6BCF\u65E5\u989D\u5EA6',
+              'Coming Soon': '\u5373\u5C06\u63A8\u51FA',
+              'Wallet connect will be enabled after token launch': '\u4EE3\u5E01\u53D1\u5E03\u540E\u5C06\u542F\u7528\u94B1\u5305\u8FDE\u63A5',
+              'BSC Wallet': 'BSC \u94B1\u5305',
+              'Solana Wallet': 'Solana \u94B1\u5305',
+              'Connect Wallet': '\u8FDE\u63A5\u94B1\u5305',
+              'Secure signature, no assets transferred': '\u5B89\u5168\u7B7E\u540D\uFF0C\u4E0D\u8F6C\u79FB\u8D44\u4EA7',
+              'Your API Key': '\u60A8\u7684 API \u5BC6\u94A5',
+              'Refresh': '\u5237\u65B0',
+              'View Logs': '\u67E5\u770B\u65E5\u5FD7',
+              'Regenerate': '\u91CD\u65B0\u751F\u6210',
+              'Copy': '\u590D\u5236',
+              'Base URL:': '\u57FA\u7840 URL\uFF1A',
+              'Daily Limit': '\u6BCF\u65E5\u9650\u989D',
+              'Remaining': '\u5269\u4F59',
+              'Used Today': '\u4ECA\u65E5\u5DF2\u7528',
+              'Tokens Held': '\u6301\u6709\u4EE3\u5E01',
+              'Hold tokens to get started': '\u6301\u6709\u4EE3\u5E01\u5F00\u59CB\u4F7F\u7528',
+              'Buy ASTHER to unlock API access': '\u8D2D\u4E70 ASTHER \u89E3\u9501 API \u8BBF\u95EE',
+              'Wallet Connected': '\u94B1\u5305\u5DF2\u8FDE\u63A5',
+              'Disconnect': '\u65AD\u5F00\u8FDE\u63A5',
+              'Top Models': '\u70ED\u95E8\u6A21\u578B',
+              'Access 200+ AI Models': '\u8BBF\u95EE 200+ AI \u6A21\u578B',
+              'View All 200+ Models': '\u67E5\u770B\u6240\u6709 200+ \u6A21\u578B',
+              'Flagship': '\u65D7\u8230',
+              'Reasoning': '\u63A8\u7406',
+              'Best Value': '\u6700\u4F73\u4EF7\u503C',
+              'Next Gen': '\u4E0B\u4E00\u4EE3',
+              'Top Logic': '\u9876\u7EA7\u903B\u8F91',
+              'Uncensored': '\u65E0\u5BA1\u67E5',
+              'MoE Arch': 'MoE \u67B6\u6784',
+              'Top Open': '\u9876\u7EA7\u5F00\u6E90',
+              'FREE API KEY': '\u514D\u8D39 API \u5BC6\u94A5',
+              'Get free AI API access by holding ASTHER tokens with daily credit limits.': '\u6301\u6709 ASTHER \u4EE3\u5E01\u53EF\u514D\u8D39\u83B7\u53D6 AI API \u8BBF\u95EE\uFF0C\u6BCF\u65E5\u6709\u989D\u5EA6\u9650\u5236\u3002'
+            },
+            ar: {
+              'Asthera Free API': 'Asthera API \u0645\u062C\u0627\u0646\u064A',
+              'Free API Key': '\u0645\u0641\u062A\u0627\u062D API \u0645\u062C\u0627\u0646\u064A',
+              'Connect Wallet for API Key': '\u0631\u0628\u0637 \u0627\u0644\u0645\u062D\u0641\u0638\u0629 \u0644\u0644\u062D\u0635\u0648\u0644 \u0639\u0644\u0649 \u0645\u0641\u062A\u0627\u062D API',
+              'Hold $ASTHER tokens to receive daily free credits.': '\u0627\u062D\u062A\u0641\u0638 \u0628\u0631\u0645\u0648\u0632 $ASTHER \u0644\u0644\u062D\u0635\u0648\u0644 \u0639\u0644\u0649 \u0631\u0635\u064A\u062F \u0645\u062C\u0627\u0646\u064A \u064A\u0648\u0645\u064A.',
+              '$10 Holding Value = $1 Daily Credit': '$10 \u0642\u064A\u0645\u0629 \u0627\u0644\u0627\u062D\u062A\u0641\u0627\u0638 = $1 \u0631\u0635\u064A\u062F \u064A\u0648\u0645\u064A',
+              'Coming Soon': '\u0642\u0631\u064A\u0628\u0627\u064B',
+              'Wallet connect will be enabled after token launch': '\u0633\u064A\u062A\u0645 \u062A\u0641\u0639\u064A\u0644 \u0631\u0628\u0637 \u0627\u0644\u0645\u062D\u0641\u0638\u0629 \u0628\u0639\u062F \u0625\u0637\u0644\u0627\u0642 \u0627\u0644\u0631\u0645\u0632',
+              'BSC Wallet': '\u0645\u062D\u0641\u0638\u0629 BSC',
+              'Solana Wallet': '\u0645\u062D\u0641\u0638\u0629 Solana',
+              'Connect Wallet': '\u0631\u0628\u0637 \u0627\u0644\u0645\u062D\u0641\u0638\u0629',
+              'Secure signature, no assets transferred': '\u062A\u0648\u0642\u064A\u0639 \u0622\u0645\u0646\u060C \u0644\u0627 \u064A\u062A\u0645 \u0646\u0642\u0644 \u0623\u064A \u0623\u0635\u0648\u0644',
+              'Your API Key': '\u0645\u0641\u062A\u0627\u062D API \u0627\u0644\u062E\u0627\u0635 \u0628\u0643',
+              'Refresh': '\u062A\u062D\u062F\u064A\u062B',
+              'View Logs': '\u0639\u0631\u0636 \u0627\u0644\u0633\u062C\u0644\u0627\u062A',
+              'Regenerate': '\u0625\u0639\u0627\u062F\u0629 \u0625\u0646\u0634\u0627\u0621',
+              'Copy': '\u0646\u0633\u062E',
+              'Base URL:': '\u0627\u0644\u0631\u0627\u0628\u0637 \u0627\u0644\u0623\u0633\u0627\u0633\u064A:',
+              'Daily Limit': '\u0627\u0644\u062D\u062F \u0627\u0644\u064A\u0648\u0645\u064A',
+              'Remaining': '\u0627\u0644\u0645\u062A\u0628\u0642\u064A',
+              'Used Today': '\u0627\u0644\u0645\u0633\u062A\u062E\u062F\u0645 \u0627\u0644\u064A\u0648\u0645',
+              'Tokens Held': '\u0627\u0644\u0631\u0645\u0648\u0632 \u0627\u0644\u0645\u062D\u062A\u0641\u0638\u0629',
+              'Hold tokens to get started': '\u0627\u062D\u062A\u0641\u0638 \u0628\u0627\u0644\u0631\u0645\u0648\u0632 \u0644\u0644\u0628\u062F\u0621',
+              'Buy ASTHER to unlock API access': '\u0627\u0634\u062A\u0631\u0650 ASTHER \u0644\u0641\u062A\u062D \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 API',
+              'Wallet Connected': '\u0627\u0644\u0645\u062D\u0641\u0638\u0629 \u0645\u062A\u0635\u0644\u0629',
+              'Disconnect': '\u0642\u0637\u0639 \u0627\u0644\u0627\u062A\u0635\u0627\u0644',
+              'Top Models': '\u0623\u0641\u0636\u0644 \u0627\u0644\u0646\u0645\u0627\u0630\u062C',
+              'Access 200+ AI Models': '\u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 200+ \u0646\u0645\u0648\u0630\u062C \u0630\u0643\u0627\u0621 \u0627\u0635\u0637\u0646\u0627\u0639\u064A',
+              'View All 200+ Models': '\u0639\u0631\u0636 \u062C\u0645\u064A\u0639 200+ \u0646\u0645\u0648\u0630\u062C',
+              'Flagship': '\u0631\u0627\u0626\u062F',
+              'Reasoning': '\u0627\u0633\u062A\u062F\u0644\u0627\u0644',
+              'Best Value': '\u0623\u0641\u0636\u0644 \u0642\u064A\u0645\u0629',
+              'Next Gen': '\u0627\u0644\u062C\u064A\u0644 \u0627\u0644\u062A\u0627\u0644\u064A',
+              'Top Logic': '\u0645\u0646\u0637\u0642 \u0645\u062A\u0642\u062F\u0645',
+              'Uncensored': '\u063A\u064A\u0631 \u0645\u0631\u0627\u0642\u0628',
+              'MoE Arch': '\u0628\u0646\u064A\u0629 MoE',
+              'Top Open': '\u0623\u0641\u0636\u0644 \u0645\u0641\u062A\u0648\u062D',
+              'FREE API KEY': '\u0645\u0641\u062A\u0627\u062D API \u0645\u062C\u0627\u0646\u064A',
+              'Get free AI API access by holding ASTHER tokens with daily credit limits.': '\u0627\u062D\u0635\u0644 \u0639\u0644\u0649 \u0648\u0635\u0648\u0644 \u0645\u062C\u0627\u0646\u064A \u0644\u0640 AI API \u0628\u0627\u062D\u062A\u0641\u0627\u0638\u0643 \u0628\u0631\u0645\u0648\u0632 ASTHER \u0645\u0639 \u062D\u062F\u0648\u062F \u064A\u0648\u0645\u064A\u0629.'
+            }
+          };
+          var dict = t[lang];
+          if (!dict) return;
+
+          function tr(text) { return dict[text] || text; }
+
+          // Translate Free API widget
+          var w = document.getElementById('fapi-widget');
+          if (w) {
+            w.querySelectorAll('.fapi-heading, .fapi-topbar-label, .fapi-con-title, .fapi-con-desc, .fapi-con-hl, .fapi-con-sec, .fapi-stat-label, .fapi-tbt, .fapi-tbs, .fapi-api-title, .fapi-btn-disc').forEach(function(el) {
+              var orig = el.textContent.trim();
+              // Handle elements with icons/svgs - only translate text nodes
+              if (el.children.length > 0) {
+                el.childNodes.forEach(function(n) {
+                  if (n.nodeType === 3 && n.textContent.trim()) {
+                    var cleaned = n.textContent.trim();
+                    if (dict[cleaned]) n.textContent = ' ' + dict[cleaned];
+                  }
+                });
+              } else {
+                if (dict[orig]) el.textContent = tr(orig);
+              }
+            });
+            // Translate buttons
+            w.querySelectorAll('.fapi-btn-con, .fapi-btn-cpy, .fapi-btn-act').forEach(function(el) {
+              el.childNodes.forEach(function(n) {
+                if (n.nodeType === 3 && n.textContent.trim()) {
+                  var cleaned = n.textContent.trim();
+                  if (dict[cleaned]) n.textContent = ' ' + dict[cleaned];
+                }
+              });
+            });
+          }
+
+          // Translate Top Models widget
+          var tm = document.getElementById('tm-widget');
+          if (tm) {
+            var badge = tm.querySelector('.tm-badge');
+            if (badge) badge.textContent = tr(badge.textContent.trim());
+            var title = tm.querySelector('.tm-title');
+            if (title) title.textContent = tr(title.textContent.trim());
+            tm.querySelectorAll('.tm-card-tag').forEach(function(el) {
+              el.childNodes.forEach(function(n) {
+                if (n.nodeType === 3 && n.textContent.trim()) {
+                  var cleaned = n.textContent.trim();
+                  if (dict[cleaned]) n.textContent = ' ' + dict[cleaned];
+                }
+              });
+            });
+            var viewAll = tm.querySelector('.tm-viewall');
+            if (viewAll) {
+              viewAll.childNodes.forEach(function(n) {
+                if (n.nodeType === 3 && n.textContent.trim()) {
+                  var cleaned = n.textContent.trim();
+                  if (dict[cleaned]) n.textContent = dict[cleaned] + ' ';
+                }
+              });
+            }
+          }
+
+          // Translate FREE API KEY card in Our Tools
+          document.querySelectorAll('h3, h4, p, span, div').forEach(function(el) {
+            var txt = el.textContent.trim();
+            if (txt === 'FREE API KEY' && !el.closest('#fapi-widget') && !el.closest('#tm-widget')) {
+              el.textContent = tr('FREE API KEY');
+            }
+            if (txt === 'Get free AI API access by holding ASTHER tokens with daily credit limits.' && !el.closest('#fapi-widget')) {
+              el.textContent = tr(txt);
+            }
+          });
+        }
+        applyFapiTranslations();
+
+        // Re-apply translations when language changes
+        var origSetItem = localStorage.setItem;
+        localStorage.setItem = function(key, val) {
+          origSetItem.call(localStorage, key, val);
+          if (key === 'astherafi-lang') {
+            setTimeout(function() { location.reload(); }, 100);
+          }
+        };
+
+        handleHomepageMods();
+
+        observer.observe(document.body, { childList: true, subtree: true });
+      })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+    <script>
+      (function(){
+        // BSC config
+        var ASTHER_BSC='0x277204675524B49D417bD0B374A1FB09465F7777',BSC_ID='0x38',BSC_RPC='https://bsc-dataseed.binance.org/';
+        var ABI=['function balanceOf(address) view returns (uint256)','function decimals() view returns (uint8)'];
+        // Solana config - ASTHER_SOL_MINT will be set when Solana token is deployed
+        var ASTHER_SOL_MINT='';
+        var SOL_RPC='https://api.mainnet-beta.solana.com';
+
+        var fapiWallet=null,fapiKey=null,fapiKeyVis=false,fapiChain=null;
+        var fapiLang=localStorage.getItem('astherafi-lang')||'en';
+        var fapiTDict={zh:{'Wallet Connected':'\u94B1\u5305\u5DF2\u8FDE\u63A5','Connect Wallet for API Key':'\u8FDE\u63A5\u94B1\u5305\u83B7\u53D6 API \u5BC6\u94A5','Please install MetaMask':'\u8BF7\u5B89\u88C5 MetaMask','Please install Phantom wallet':'\u8BF7\u5B89\u88C5 Phantom \u94B1\u5305','Connection failed':'\u8FDE\u63A5\u5931\u8D25','Copied!':'\u5DF2\u590D\u5236\uFF01','Key regenerated':'\u5BC6\u94A5\u5DF2\u91CD\u65B0\u751F\u6210','Hold tokens to get started':'\u6301\u6709\u4EE3\u5E01\u5F00\u59CB\u4F7F\u7528','Buy ASTHER to unlock API access':'\u8D2D\u4E70 ASTHER \u89E3\u9501 API \u8BBF\u95EE'},ar:{'Wallet Connected':'\u0627\u0644\u0645\u062D\u0641\u0638\u0629 \u0645\u062A\u0635\u0644\u0629','Connect Wallet for API Key':'\u0631\u0628\u0637 \u0627\u0644\u0645\u062D\u0641\u0638\u0629 \u0644\u0644\u062D\u0635\u0648\u0644 \u0639\u0644\u0649 \u0645\u0641\u062A\u0627\u062D API','Please install MetaMask':'\u064A\u0631\u062C\u0649 \u062A\u062B\u0628\u064A\u062A MetaMask','Please install Phantom wallet':'\u064A\u0631\u062C\u0649 \u062A\u062B\u0628\u064A\u062A \u0645\u062D\u0641\u0638\u0629 Phantom','Connection failed':'\u0641\u0634\u0644 \u0627\u0644\u0627\u062A\u0635\u0627\u0644','Copied!':'\u062A\u0645 \u0627\u0644\u0646\u0633\u062E!','Key regenerated':'\u062A\u0645 \u0625\u0639\u0627\u062F\u0629 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0641\u062A\u0627\u062D','Hold tokens to get started':'\u0627\u062D\u062A\u0641\u0638 \u0628\u0627\u0644\u0631\u0645\u0648\u0632 \u0644\u0644\u0628\u062F\u0621','Buy ASTHER to unlock API access':'\u0627\u0634\u062A\u0631\u0650 ASTHER \u0644\u0641\u062A\u062D \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 API'}};
+        function fTr(s){return (fapiTDict[fapiLang]||{})[s]||s}
+        function sAddr(a){return a.slice(0,6)+'...'+a.slice(-4)}
+        function mKey(k){return k.slice(0,6)+'\u2022'.repeat(12)+k.slice(-4)}
+        function fapiToast(m){var t=document.createElement('div');t.className='fapi-toast';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove()},2500)}
+
+        function fapiShowConnected(addr,chain){
+          var chainLabel=chain==='solana'?' (SOL)':' (BSC)';
+          document.getElementById('fapi-top-label').textContent=fTr('Wallet Connected')+chainLabel;
+          document.getElementById('fapi-top-addr').textContent=sAddr(addr);
+          document.getElementById('fapi-top-addr').style.fontSize='17px';
+          document.getElementById('fapi-btn-disc').classList.remove('fapi-hidden');
+          document.getElementById('fapi-overlay').classList.add('fapi-hidden');
+        }
+
+        // BSC (MetaMask) connect - DISABLED until Solana contract is provided
+        window.fapiConnectBSC=async function(){
+          fapiToast('Coming Soon');return;
+          if(!window.ethereum){fapiToast(fTr('Please install MetaMask'));return}
+          try{
+            var accs=await window.ethereum.request({method:'eth_requestAccounts'});
+            if(!accs||!accs.length)return;
+            try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:BSC_ID}]})}
+            catch(e){if(e.code===4902)await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:BSC_ID,chainName:'BNB Smart Chain',nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},rpcUrls:[BSC_RPC],blockExplorerUrls:['https://bscscan.com']}]})}
+            fapiWallet=accs[0];fapiChain='bsc';
+            fapiShowConnected(fapiWallet,'bsc');
+            await fapiLoad();
+          }catch(e){fapiToast(fTr('Connection failed'))}
+        };
+
+        // Solana (Phantom) connect - DISABLED until Solana contract is provided
+        window.fapiConnectSolana=async function(){
+          fapiToast('Coming Soon');return;
+          var provider=window.phantom&&window.phantom.solana?window.phantom.solana:window.solana;
+          if(!provider||!provider.isPhantom){
+            fapiToast(fTr('Please install Phantom wallet'));
+            window.open('https://phantom.app/','_blank');
+            return;
+          }
+          try{
+            var resp=await provider.connect();
+            fapiWallet=resp.publicKey.toString();fapiChain='solana';
+            fapiShowConnected(fapiWallet,'solana');
+            await fapiLoad();
+          }catch(e){fapiToast(fTr('Connection failed'))}
+        };
+
+        // Legacy connect function (fallback)
+        window.fapiConnect=window.fapiConnectBSC;
+
+        window.fapiDisconnect=function(){
+          // Disconnect Solana if connected
+          if(fapiChain==='solana'){
+            var provider=window.phantom&&window.phantom.solana?window.phantom.solana:window.solana;
+            if(provider&&provider.disconnect)try{provider.disconnect()}catch(e){}
+          }
+          fapiWallet=null;fapiKey=null;fapiKeyVis=false;fapiChain=null;
+          document.getElementById('fapi-top-label').textContent=fTr('Connect Wallet for API Key');
+          document.getElementById('fapi-top-addr').textContent='';
+          document.getElementById('fapi-btn-disc').classList.add('fapi-hidden');
+          document.getElementById('fapi-overlay').classList.remove('fapi-hidden');
+          document.getElementById('fapi-key-display').textContent='sk-xxxx............xxxx';
+          document.getElementById('fapi-s-limit').textContent='$0.00';
+          document.getElementById('fapi-s-remain').textContent='$0.00';
+          document.getElementById('fapi-s-used').textContent='$0.00';
+          document.getElementById('fapi-s-tokens').textContent='0.00';
+          document.getElementById('fapi-prog').style.width='0%';
+          document.getElementById('fapi-pct').textContent='0%';
+        };
+
+        // BSC balance check
+        async function getBscBal(){
+          try{var p=new ethers.JsonRpcProvider(BSC_RPC),c=new ethers.Contract(ASTHER_BSC,ABI,p),d=await c.decimals(),b=await c.balanceOf(fapiWallet);return parseFloat(ethers.formatUnits(b,d))}catch(e){return 0}
+        }
+
+        // Solana SPL token balance check
+        async function getSolBal(){
+          if(!ASTHER_SOL_MINT||!fapiWallet)return 0;
+          try{
+            var body=JSON.stringify({jsonrpc:'2.0',id:1,method:'getTokenAccountsByOwner',params:[fapiWallet,{mint:ASTHER_SOL_MINT},{encoding:'jsonParsed'}]});
+            var resp=await fetch(SOL_RPC,{method:'POST',headers:{'Content-Type':'application/json'},body:body});
+            var data=await resp.json();
+            if(data.result&&data.result.value&&data.result.value.length>0){
+              var info=data.result.value[0].account.data.parsed.info;
+              return parseFloat(info.tokenAmount.uiAmountString||'0');
+            }
+            return 0;
+          }catch(e){return 0}
+        }
+
+        // Get balance based on connected chain
+        async function getBal(){
+          if(fapiChain==='solana')return getSolBal();
+          return getBscBal();
+        }
+
+        function getTier(b){
+          if(b>=100000)return{name:'Diamond',limit:15,pct:100};
+          if(b>=10000)return{name:'Gold',limit:5,pct:75};
+          if(b>=1000)return{name:'Silver',limit:2,pct:50};
+          if(b>0)return{name:'Basic',limit:0.5,pct:25};
+          return{name:'None',limit:0,pct:0};
+        }
+
+        async function fapiLoad(){
+          var bal=await getBal(),tier=getTier(bal);
+          document.getElementById('fapi-s-tokens').textContent=bal.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+          document.getElementById('fapi-s-limit').textContent='$'+tier.limit.toFixed(2);
+          document.getElementById('fapi-prog').style.width=tier.pct+'%';
+          document.getElementById('fapi-pct').textContent=tier.pct+'%';
+          if(bal>0){
+            document.getElementById('fapi-ticon').innerHTML='&#x1F3C6;';
+            document.getElementById('fapi-ticon').style.background='#ecfdf5';
+            document.getElementById('fapi-ttitle').textContent=tier.name+' Tier';
+            var holdingText=fapiLang==='zh'?'\u6301\u6709 '+bal.toLocaleString(undefined,{maximumFractionDigits:0})+' ASTHER':fapiLang==='ar'?'\u064A\u062D\u062A\u0641\u0638 \u0628\u0640 '+bal.toLocaleString(undefined,{maximumFractionDigits:0})+' ASTHER':'Holding '+bal.toLocaleString(undefined,{maximumFractionDigits:0})+' ASTHER';
+            document.getElementById('fapi-tsub').textContent=holdingText;
+            await fapiGetKey();
+          }else{
+            document.getElementById('fapi-ticon').innerHTML='&#x23F3;';
+            document.getElementById('fapi-ticon').style.background='#fef3c7';
+            var noTokensText=fapiLang==='zh'?'\u65E0 ASTHER \u4EE3\u5E01':fapiLang==='ar'?'\u0644\u0627 \u062A\u0648\u062C\u062F \u0631\u0645\u0648\u0632 ASTHER':'No ASTHER Tokens';
+            document.getElementById('fapi-ttitle').textContent=noTokensText;
+            document.getElementById('fapi-tsub').textContent=fTr('Buy ASTHER to unlock API access');
+            var holdKeyText=fapiLang==='zh'?'\u6301\u6709 ASTHER \u4EE3\u5E01\u83B7\u53D6 API \u5BC6\u94A5':fapiLang==='ar'?'\u0627\u062D\u062A\u0641\u0638 \u0628\u0631\u0645\u0648\u0632 ASTHER \u0644\u0644\u062D\u0635\u0648\u0644 \u0639\u0644\u0649 \u0645\u0641\u062A\u0627\u062D API':'Hold ASTHER tokens to get API key';
+            document.getElementById('fapi-key-display').textContent=holdKeyText;
+            document.getElementById('fapi-s-remain').textContent='$0.00';
+            document.getElementById('fapi-s-used').textContent='$0.00';
+          }
+        }
+
+        async function fapiGetKey(){
+          try{
+            document.getElementById('fapi-key-display').textContent='Loading...';
+            var r=await fetch('/api/free-api/key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:fapiWallet,chain:fapiChain})});
+            var d=await r.json();
+            if(d.apiKey){fapiKey=d.apiKey;fapiKeyVis=false;document.getElementById('fapi-key-display').textContent=mKey(fapiKey);document.getElementById('fapi-s-used').textContent='$'+(d.usedToday||0).toFixed(2);var lim=parseFloat(document.getElementById('fapi-s-limit').textContent.replace('$',''));document.getElementById('fapi-s-remain').textContent='$'+Math.max(0,lim-(d.usedToday||0)).toFixed(2)}
+            else{document.getElementById('fapi-key-display').textContent=d.error||'Error'}
+          }catch(e){document.getElementById('fapi-key-display').textContent='Failed to load'}
+        }
+
+        window.fapiRegenerate=async function(){
+          if(!fapiWallet)return;
+          var regenText=fapiLang==='zh'?'\u91CD\u65B0\u751F\u6210\u4E2D...':fapiLang==='ar'?'\u062C\u0627\u0631\u064A \u0625\u0639\u0627\u062F\u0629 \u0627\u0644\u0625\u0646\u0634\u0627\u0621...':'Regenerating...';
+          try{document.getElementById('fapi-key-display').textContent=regenText;var r=await fetch('/api/free-api/regenerate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:fapiWallet,chain:fapiChain})});var d=await r.json();if(d.apiKey){fapiKey=d.apiKey;fapiKeyVis=false;document.getElementById('fapi-key-display').textContent=mKey(fapiKey);fapiToast(fTr('Key regenerated'))}}catch(e){var failText=fapiLang==='zh'?'\u91CD\u65B0\u751F\u6210\u5931\u8D25':fapiLang==='ar'?'\u0641\u0634\u0644 \u0625\u0639\u0627\u062F\u0629 \u0627\u0644\u0625\u0646\u0634\u0627\u0621':'Failed to regenerate';fapiToast(failText)}
+        };
+        window.fapiToggleKey=function(){if(!fapiKey)return;fapiKeyVis=!fapiKeyVis;document.getElementById('fapi-key-display').textContent=fapiKeyVis?fapiKey:mKey(fapiKey)};
+        window.fapiCopy=function(){if(!fapiKey)return;navigator.clipboard.writeText(fapiKey).then(function(){fapiToast(fTr('Copied!'))})};
+        window.fapiViewLogs=function(){var logText=fapiLang==='zh'?'\u4F7F\u7528\u65E5\u5FD7\u5373\u5C06\u63A8\u51FA':fapiLang==='ar'?'\u0633\u062C\u0644\u0627\u062A \u0627\u0644\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0642\u0631\u064A\u0628\u0627\u064B':'Usage logs coming soon';fapiToast(logText)};
+        window.fapiRefresh=async function(){if(!fapiWallet)return;var refText=fapiLang==='zh'?'\u5237\u65B0\u4E2D...':fapiLang==='ar'?'\u062C\u0627\u0631\u064A \u0627\u0644\u062A\u062D\u062F\u064A\u062B...':'Refreshing...';fapiToast(refText);await fapiLoad()};
+
+        // BSC wallet event listeners
+        if(window.ethereum){
+          window.ethereum.on('accountsChanged',function(a){if(fapiChain!=='bsc')return;if(!a.length)window.fapiDisconnect();else{fapiWallet=a[0];document.getElementById('fapi-top-addr').textContent=sAddr(fapiWallet);fapiLoad()}});
+          window.ethereum.on('chainChanged',function(){if(fapiChain==='bsc'&&fapiWallet)fapiLoad()});
+        }
+
+        // Solana wallet event listeners
+        var solProvider=window.phantom&&window.phantom.solana?window.phantom.solana:window.solana;
+        if(solProvider&&solProvider.isPhantom){
+          solProvider.on('disconnect',function(){if(fapiChain==='solana')window.fapiDisconnect()});
+          solProvider.on('accountChanged',function(pk){if(fapiChain!=='solana')return;if(pk){fapiWallet=pk.toString();document.getElementById('fapi-top-addr').textContent=sAddr(fapiWallet);fapiLoad()}else{window.fapiDisconnect()}});
+        }
+      })();
+    </script>
+  </body>
+</html>
