@@ -52,6 +52,7 @@ Available in English, Chinese, and Arabic.
 
 - **Website**: [https://astherafi.com](https://astherafi.com)
 - **Twitter/X**: [@astherafi](https://x.com/astherafi)
+- **Telegram**: [@AstheraFi_Official(https://t.me/AstheraFi_Official)]
 
 ---
 
